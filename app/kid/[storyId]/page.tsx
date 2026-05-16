@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, use } from 'react';
+import { useEffect, useState, useCallback, useRef, use } from 'react';
 import Link from 'next/link';
 import { data } from '@/lib/data';
 import type { StoryNode, Story, StoryBible } from '@/lib/types';
@@ -36,6 +36,9 @@ export default function KidStoryPage({
   const [bible, setBible] = useState<StoryBible | null>(null);
   const [path, setPath] = useState<string[]>([]);
   const [fallbackChoices, setFallbackChoices] = useState<string[]>([]);
+  const [playingIndex, setPlayingIndex] = useState<number | null>(null);
+  const playAllAudioRef = useRef<HTMLAudioElement | null>(null);
+  const playAllCancelledRef = useRef(false);
 
   const refresh = useCallback(async () => {
     const s = await data.getStory(storyId);
@@ -127,6 +130,66 @@ export default function KidStoryPage({
     }
   };
 
+  const stopPlayAll = useCallback(() => {
+    playAllCancelledRef.current = true;
+    if (playAllAudioRef.current) {
+      playAllAudioRef.current.pause();
+      playAllAudioRef.current.onended = null;
+      playAllAudioRef.current = null;
+    }
+    window.speechSynthesis?.cancel();
+    setPlayingIndex(null);
+  }, []);
+
+  const playAll = useCallback(() => {
+    if (visibleNodes.length === 0) return;
+    // Cancel any in-flight per-bubble playback first
+    window.speechSynthesis?.cancel();
+    playAllCancelledRef.current = false;
+
+    const playOne = (i: number) => {
+      if (playAllCancelledRef.current) return;
+      if (i >= visibleNodes.length) {
+        setPlayingIndex(null);
+        return;
+      }
+      setPlayingIndex(i);
+      const node = visibleNodes[i];
+      const advance = () => {
+        if (playAllCancelledRef.current) return;
+        // Small gap between bubbles so it doesn't feel rushed
+        setTimeout(() => playOne(i + 1), 350);
+      };
+
+      if (node.audioUrl) {
+        const a = new Audio(node.audioUrl);
+        playAllAudioRef.current = a;
+        a.onended = advance;
+        a.onerror = advance;
+        a.play().catch(advance);
+      } else if (node.text) {
+        const u = new SpeechSynthesisUtterance(node.text);
+        u.rate = 0.92;
+        u.pitch = 1.05;
+        u.onend = advance;
+        u.onerror = advance;
+        window.speechSynthesis.speak(u);
+      } else {
+        advance();
+      }
+    };
+    playOne(0);
+  }, [visibleNodes]);
+
+  useEffect(() => {
+    return () => {
+      // Cleanup on unmount: kill any in-flight play-all
+      playAllCancelledRef.current = true;
+      playAllAudioRef.current?.pause();
+      window.speechSynthesis?.cancel();
+    };
+  }, []);
+
   const reset = async () => {
     if (!confirm('Start the story over? (Recordings stay; your path resets.)')) return;
     await data.setSession({ storyId, currentNodeId: null, updatedAt: Date.now() });
@@ -167,6 +230,33 @@ export default function KidStoryPage({
               <div className="annotation mb-1.5">FEELS LIKE</div>
               <ThemePills bible={bible} limit={5} />
             </div>
+          )}
+        </div>
+      )}
+
+      {visibleNodes.length > 0 && (
+        <div className="px-5 pt-4 max-w-3xl w-full mx-auto flex items-center gap-3 flex-wrap">
+          {playingIndex === null ? (
+            <button
+              onClick={playAll}
+              type="button"
+              className="sketched-btn marker-coral"
+            >
+              <span>▶</span> PLAY THE WHOLE STORY
+            </button>
+          ) : (
+            <>
+              <button
+                onClick={stopPlayAll}
+                type="button"
+                className="sketched-btn marker-coral"
+              >
+                <span>■</span> STOP
+              </button>
+              <div className="annotation ink">
+                PLAYING {playingIndex + 1} OF {visibleNodes.length}
+              </div>
+            </>
           )}
         </div>
       )}
