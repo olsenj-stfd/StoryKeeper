@@ -219,6 +219,26 @@ export const idbAdapter: DataAdapter = {
     notifyAll();
   },
 
+  async deleteStory(storyId) {
+    // Cascade delete everything tied to this story: nodes, their audio
+    // blobs, cached object URLs, the kid's session, and the story bible.
+    const nodes = await getAllByIndex<StoryNode>(STORES.nodes, 'storyId', storyId);
+    for (const n of nodes) {
+      await del(STORES.nodes, n.id);
+      await del(STORES.audio, n.id);
+      const url = audioUrlCache.get(n.id);
+      if (url) {
+        URL.revokeObjectURL(url);
+        audioUrlCache.delete(n.id);
+      }
+    }
+    await del(STORES.sessions, storyId);
+    await del(STORES.bibles, storyId);
+    await del(STORES.stories, storyId);
+    notify(storyId);
+    notifyAll();
+  },
+
   async listNodes(storyId) {
     if (typeof window === 'undefined') return [];
     await ensureSeed();

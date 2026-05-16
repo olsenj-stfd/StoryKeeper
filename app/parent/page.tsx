@@ -46,6 +46,12 @@ export default function ParentLibrary() {
     router.push(`/parent/${story.id}`);
   };
 
+  const deleteStory = async (storyId: string, title: string) => {
+    const label = title.trim() || 'this untitled story';
+    if (!confirm(`Delete "${label}" forever? This can't be undone.`)) return;
+    await data.deleteStory(storyId);
+  };
+
   return (
     <div className="flex flex-col flex-1 paper-grid px-5 py-6">
       <header className="flex justify-between items-end mb-6 max-w-2xl w-full mx-auto pb-3 border-b border-dashed border-ink/30">
@@ -93,18 +99,30 @@ export default function ParentLibrary() {
               {stories.length > 0 && (
                 <div className="grid sm:grid-cols-2 gap-3">
                   {stories.map((s) => (
-                    <Link
+                    <div
                       key={s.id}
-                      href={`/parent/${s.id}`}
-                      className="bg-white border-2 border-ink/70 rounded-lg px-3 py-2.5 hover:border-ink transition"
+                      className="relative bg-white border-2 border-ink/70 rounded-lg pr-8"
                     >
-                      <div className="font-bold text-sm">
-                        {s.title.trim() || (
-                          <span className="text-muted italic">Untitled story</span>
-                        )}
-                      </div>
-                      <div className="annotation mt-1">TAP TO EDIT &rarr;</div>
-                    </Link>
+                      <Link
+                        href={`/parent/${s.id}`}
+                        className="block px-3 py-2.5 hover:bg-cream-soft rounded-lg transition"
+                      >
+                        <div className="font-bold text-sm">
+                          {s.title.trim() || (
+                            <span className="text-muted italic">Untitled story</span>
+                          )}
+                        </div>
+                        <div className="annotation mt-1">TAP TO EDIT &rarr;</div>
+                      </Link>
+                      <button
+                        onClick={() => deleteStory(s.id, s.title)}
+                        aria-label={`Delete ${s.title || 'untitled story'}`}
+                        type="button"
+                        className="absolute top-1.5 right-1.5 w-6 h-6 flex items-center justify-center text-muted hover:text-[#c64a4a] hover:bg-[#c64a4a]/10 rounded text-sm leading-none"
+                      >
+                        ✕
+                      </button>
+                    </div>
                   ))}
                 </div>
               )}
