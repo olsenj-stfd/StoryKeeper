@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { data } from '@/lib/data';
-import type { Story, World } from '@/lib/types';
+import type { Story, StoryBible, World } from '@/lib/types';
+import { CharacterPills } from '@/components/CharacterPills';
 
 const HUE_MARKER: Record<string, string> = {
   kid: 'marker-kid',
@@ -15,13 +16,22 @@ const HUE_MARKER: Record<string, string> = {
 export default function KidLibrary() {
   const [worlds, setWorlds] = useState<World[]>([]);
   const [storiesByWorld, setStoriesByWorld] = useState<Record<string, Story[]>>({});
+  const [bibles, setBibles] = useState<Record<string, StoryBible | null>>({});
 
   const refresh = useCallback(async () => {
     const ws = await data.listWorlds();
     setWorlds(ws);
-    const map: Record<string, Story[]> = {};
-    for (const w of ws) map[w.id] = await data.listStoriesByWorld(w.id);
-    setStoriesByWorld(map);
+    const storyMap: Record<string, Story[]> = {};
+    const bibleMap: Record<string, StoryBible | null> = {};
+    for (const w of ws) {
+      const stories = await data.listStoriesByWorld(w.id);
+      storyMap[w.id] = stories;
+      for (const s of stories) {
+        bibleMap[s.id] = await data.getStoryBible(s.id);
+      }
+    }
+    setStoriesByWorld(storyMap);
+    setBibles(bibleMap);
   }, []);
 
   useEffect(() => {
@@ -77,8 +87,9 @@ export default function KidLibrary() {
                     <div className="annotation absolute -top-4 left-5">
                       STORY {si + 1}
                     </div>
-                    <div className="font-display text-xl">{s.title}</div>
-                    <div className="text-sm font-bold mt-1 text-muted">
+                    <div className="font-display text-xl mb-2">{s.title}</div>
+                    <CharacterPills bible={bibles[s.id] ?? null} limit={3} />
+                    <div className="text-sm font-bold mt-3 text-muted">
                       Tap to read &rarr;
                     </div>
                   </Link>

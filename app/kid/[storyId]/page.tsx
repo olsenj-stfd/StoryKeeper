@@ -3,9 +3,10 @@
 import { useEffect, useState, useCallback, use } from 'react';
 import Link from 'next/link';
 import { data } from '@/lib/data';
-import type { StoryNode, Story } from '@/lib/types';
+import type { StoryNode, Story, StoryBible } from '@/lib/types';
 import { SketchedBubble } from '@/components/SketchedBubble';
 import { BranchPicker } from '@/components/BranchPicker';
+import { CharacterPills, ThemePills } from '@/components/CharacterPills';
 import { pickThreeBranches } from '@/lib/branches';
 
 function reconstructPath(nodes: StoryNode[], currentId: string): string[] {
@@ -29,14 +30,17 @@ export default function KidStoryPage({
   const { storyId } = use(params);
   const [story, setStory] = useState<Story | null>(null);
   const [nodes, setNodes] = useState<StoryNode[]>([]);
+  const [bible, setBible] = useState<StoryBible | null>(null);
   const [path, setPath] = useState<string[]>([]);
   const [fallbackChoices, setFallbackChoices] = useState<string[]>([]);
 
   const refresh = useCallback(async () => {
     const s = await data.getStory(storyId);
     const ns = await data.listNodes(storyId);
+    const b = await data.getStoryBible(storyId);
     setStory(s);
     setNodes(ns);
+    setBible(b);
     const session = await data.getSession(storyId);
     if (session?.currentNodeId && ns.find((n) => n.id === session.currentNodeId)) {
       setPath(reconstructPath(ns, session.currentNodeId));
@@ -117,6 +121,23 @@ export default function KidStoryPage({
           &larr; SWITCH
         </Link>
       </header>
+
+      {bible && (bible.characters.length > 0 || bible.themes.length > 0) && (
+        <div className="px-5 pt-4 max-w-3xl w-full mx-auto">
+          {bible.characters.length > 0 && (
+            <div className="mb-3">
+              <div className="annotation mb-1.5">WHO&rsquo;S IN THIS STORY</div>
+              <CharacterPills bible={bible} limit={6} />
+            </div>
+          )}
+          {bible.themes.length > 0 && (
+            <div>
+              <div className="annotation mb-1.5">FEELS LIKE</div>
+              <ThemePills bible={bible} limit={5} />
+            </div>
+          )}
+        </div>
+      )}
 
       <main className="flex-1 overflow-y-auto px-5 py-8 flex flex-col gap-6 max-w-3xl w-full mx-auto">
         {visibleNodes.map((n) => {

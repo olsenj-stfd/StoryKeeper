@@ -6,7 +6,6 @@ import { data } from '@/lib/data';
 import type { StoryNode, Story, StoryBible } from '@/lib/types';
 import { Bubble } from '@/components/Bubble';
 import { RecordButton } from '@/components/RecordButton';
-import { UploadButton } from '@/components/UploadButton';
 import { StoryBiblePanel } from '@/components/StoryBiblePanel';
 
 type DraftKind = 'voice' | 'prompt';
@@ -47,21 +46,25 @@ export default function ParentStoryPage({
 
   const siblings = nodes.filter((n) => n.parentNodeId === selectedParentId);
 
-  const saveAudioNode = async (blob: Blob, isUpload = false) => {
+  const saveAudioNode = async (blob: Blob, transcript: string) => {
     if (!selectedParentId && nodes.length > 0) {
       alert('Tap a bubble above to choose where this attaches.');
       return;
     }
-    const fallbackText = isUpload
-      ? `(${who} uploaded a recording.)`
-      : `(${who} recorded the next part of the story.)`;
+    const summary = text.trim();
+    const cleanTranscript = transcript.trim();
+    // Prefer typed summary; fall back to transcript; final fallback is a generic line.
+    const nodeText =
+      summary ||
+      cleanTranscript ||
+      `(${who} recorded the next part of the story.)`;
     const node = await data.appendNode(
       {
         storyId,
         parentNodeId: selectedParentId,
         type: kind,
         who,
-        text: text.trim() || fallbackText,
+        text: nodeText,
         branchLabel: branchLabel.trim() || null,
         branchIcon: null,
         orderIndex: siblings.length,
@@ -215,10 +218,7 @@ export default function ParentStoryPage({
             >
               {loadingBranches ? 'Thinking…' : 'Suggest branches'}
             </button>
-            <div className="flex items-center gap-2">
-              <UploadButton onFile={(f) => saveAudioNode(f, true)} />
-              <RecordButton onRecorded={(b) => saveAudioNode(b, false)} />
-            </div>
+            <RecordButton onRecorded={saveAudioNode} />
           </div>
 
           {suggestions.length > 0 && (
