@@ -8,7 +8,14 @@ type SpeechRecognitionLike = {
   lang: string;
   start(): void;
   stop(): void;
-  onresult: ((e: { resultIndex: number; results: ArrayLike<ArrayLike<{ transcript: string }> & { isFinal: boolean }> }) => void) | null;
+  onresult:
+    | ((e: {
+        resultIndex: number;
+        results: ArrayLike<
+          ArrayLike<{ transcript: string }> & { isFinal: boolean }
+        >;
+      }) => void)
+    | null;
   onerror: ((e: { error: string }) => void) | null;
 };
 
@@ -23,6 +30,27 @@ function makeRecognition(): SpeechRecognitionLike | null {
   return new Ctor();
 }
 
+function pickAudioMimeType(): string | undefined {
+  if (
+    typeof MediaRecorder === 'undefined' ||
+    !MediaRecorder.isTypeSupported
+  ) {
+    return undefined;
+  }
+  const candidates = [
+    'audio/webm;codecs=opus',
+    'audio/webm',
+    'audio/mp4;codecs=mp4a.40.2',
+    'audio/mp4',
+    'audio/mpeg',
+    'audio/aac',
+  ];
+  for (const c of candidates) {
+    if (MediaRecorder.isTypeSupported(c)) return c;
+  }
+  return undefined;
+}
+
 export function RecordButton({
   onRecorded,
 }: {
@@ -31,26 +59,44 @@ export function RecordButton({
   const [recording, setRecording] = useState(false);
   const [busy, setBusy] = useState(false);
   const [hint, setHint] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const transcriptRef = useRef<string>('');
 
   const start = async () => {
+    setError(null);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const rec = new MediaRecorder(stream);
+      const mimeType = pickAudioMimeType();
+      const rec = mimeType
+        ? new MediaRecorder(stream, { mimeType })
+        : new MediaRecorder(stream);
       chunksRef.current = [];
       transcriptRef.current = '';
 
       rec.ondataavailable = (e) => {
         if (e.data.size) chunksRef.current.push(e.data);
       };
+      rec.onerror = (e) => {
+        const err = (e as unknown as { error?: { message?: string } }).error;
+        setError('Recorder error: ' + (err?.message ?? 'unknown'));
+        stream.getTracks().forEach((t) => t.stop());
+        setRecording(false);
+      };
       rec.onstop = async () => {
         setBusy(true);
-        const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+        // Use the actual mime type the recorder used — important on iOS where
+        // it produces audio/mp4 even if we asked for webm.
+        const blobType = rec.mimeType || mimeType || 'audio/webm';
+        const blob = new Blob(chunksRef.current, { type: blobType });
         stream.getTracks().forEach((t) => t.stop());
-        await onRecorded(blob, transcriptRef.current.trim());
+        try {
+          await onRecorded(blob, transcriptRef.current.trim());
+        } catch (err) {
+          setError('Save failed: ' + (err as Error).message);
+        }
         setBusy(false);
       };
       recorderRef.current = rec;
@@ -75,24 +121,28 @@ export function RecordButton({
         };
         try {
           recognition.start();
+          setHint(null);
         } catch {
-          /* recognition may throw if started twice; ignore */
+          /* ignore double-start */
         }
         recognitionRef.current = recognition;
-        setHint(null);
       } else {
-        setHint('(no transcription — Chrome/Edge only)');
+        setHint('No live transcription on this device — type a summary above so the AI can index.');
       }
 
       rec.start();
       setRecording(true);
     } catch (err) {
-      alert('Could not access microphone: ' + (err as Error).message);
+      setError('Could not access microphone: ' + (err as Error).message);
     }
   };
 
   const stop = () => {
-    recorderRef.current?.stop();
+    try {
+      recorderRef.current?.stop();
+    } catch (err) {
+      setError('Stop failed: ' + (err as Error).message);
+    }
     if (recognitionRef.current) {
       try {
         recognitionRef.current.stop();
@@ -105,7 +155,7 @@ export function RecordButton({
   };
 
   return (
-    <div className="flex flex-col items-end gap-1">
+    <div className="flex flex-col items-end gap-1 max-w-full">
       <button
         onClick={recording ? stop : start}
         disabled={busy}
@@ -116,7 +166,16 @@ export function RecordButton({
       >
         {busy ? 'Saving…' : recording ? '■ Stop' : '● Record'}
       </button>
-      {hint && <div className="text-[11px] text-muted">{hint}</div>}
+      {hint && (
+        <div className="text-[11px] text-muted text-right max-w-[260px] leading-tight">
+          {hint}
+        </div>
+      )}
+      {error && (
+        <div className="text-[12px] text-[#c64a4a] text-right max-w-[260px] leading-tight font-bold">
+          {error}
+        </div>
+      )}
     </div>
   );
 }
