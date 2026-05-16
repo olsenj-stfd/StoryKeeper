@@ -27,6 +27,18 @@ export default function ParentStoryPage({
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [loadingBranches, setLoadingBranches] = useState(false);
   const [loadingIndex, setLoadingIndex] = useState(false);
+  const [noSpeech, setNoSpeech] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const w = window as unknown as {
+      SpeechRecognition?: unknown;
+      webkitSpeechRecognition?: unknown;
+    };
+    if (!w.SpeechRecognition && !w.webkitSpeechRecognition) {
+      setNoSpeech(true);
+    }
+  }, []);
 
   const refresh = useCallback(async () => {
     const s = await data.getStory(storyId);
@@ -175,6 +187,14 @@ export default function ParentStoryPage({
 
       <footer className="border-t border-dashed border-line bg-white px-5 py-4">
         <div className="max-w-3xl mx-auto space-y-3">
+          {noSpeech && (
+            <div className="bg-kid-soft border-2 border-ink/40 rounded-xl px-3 py-2.5 text-sm">
+              <strong>This device can&rsquo;t auto-transcribe.</strong> Type a
+              summary in the field below before tapping Record so the AI can
+              read your story.
+            </div>
+          )}
+
           <div className="flex items-center gap-2">
             <div className="text-[12px] tracking-[0.16em] uppercase text-muted">
               {kind === 'voice' ? 'Add the next part' : 'Record a choice prompt'}
@@ -206,10 +226,16 @@ export default function ParentStoryPage({
               onChange={(e) => setText(e.target.value)}
               placeholder={
                 kind === 'voice'
-                  ? 'A one-line summary (helps AI indexing)'
+                  ? noSpeech
+                    ? 'Summary of what you recorded (required for indexing on this device)'
+                    : 'A one-line summary (helps AI indexing)'
                   : 'What is the question?'
               }
-              className="rounded-lg border border-line bg-white px-3 py-2 text-sm"
+              className={`rounded-lg border bg-white px-3 py-2 text-sm ${
+                noSpeech && kind === 'voice'
+                  ? 'border-2 border-ink/60'
+                  : 'border-line'
+              }`}
             />
           </div>
 
