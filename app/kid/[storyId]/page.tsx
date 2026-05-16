@@ -7,7 +7,9 @@ import type { StoryNode, Story, StoryBible } from '@/lib/types';
 import { SketchedBubble } from '@/components/SketchedBubble';
 import { BranchPicker } from '@/components/BranchPicker';
 import { CharacterPills, ThemePills } from '@/components/CharacterPills';
-import { pickThreeBranches } from '@/lib/branches';
+import { pickBranches } from '@/lib/branches';
+
+const TARGET_OPTION_COUNT = 4;
 
 function reconstructPath(nodes: StoryNode[], currentId: string): string[] {
   const byId = new Map(nodes.map((n) => [n.id, n]));
@@ -60,7 +62,7 @@ export default function KidStoryPage({
   }, [refresh, storyId]);
 
   useEffect(() => {
-    if (fallbackChoices.length === 0) setFallbackChoices(pickThreeBranches());
+    if (fallbackChoices.length === 0) setFallbackChoices(pickBranches(TARGET_OPTION_COUNT));
   }, [fallbackChoices.length]);
 
   const currentId = path[path.length - 1];
@@ -91,15 +93,40 @@ export default function KidStoryPage({
       orderIndex: children.length,
     });
     setPath([...path, node.id]);
-    setFallbackChoices(pickThreeBranches());
+    setFallbackChoices(pickBranches(TARGET_OPTION_COUNT));
     await data.setSession({ storyId, currentNodeId: node.id, updatedAt: Date.now() });
+  };
+
+  // Always surface at least TARGET_OPTION_COUNT options. Start with the parent-recorded
+  // branches, then fill the rest from the curated fallback pool.
+  const recordedOptions = parentRecordedBranches.map((n) => ({
+    id: n.id,
+    label: n.branchLabel ?? '',
+    icon: n.branchIcon,
+  }));
+  const fillCount = Math.max(
+    0,
+    TARGET_OPTION_COUNT - recordedOptions.length,
+  );
+  const fallbackOptions = fallbackChoices.slice(0, fillCount).map((t) => ({
+    id: t,
+    label: t,
+  }));
+  const allOptions = [...recordedOptions, ...fallbackOptions];
+
+  const onPickOption = (id: string) => {
+    if (parentRecordedBranches.some((n) => n.id === id)) {
+      void pickRecordedBranch(id);
+    } else {
+      void pickFallback(id);
+    }
   };
 
   const reset = async () => {
     if (!confirm('Start the story over? (Recordings stay; your path resets.)')) return;
     await data.setSession({ storyId, currentNodeId: null, updatedAt: Date.now() });
     setPath([]);
-    setFallbackChoices(pickThreeBranches());
+    setFallbackChoices(pickBranches(TARGET_OPTION_COUNT));
     refresh();
   };
 
@@ -151,21 +178,7 @@ export default function KidStoryPage({
           <div className="annotation ink mb-3">
             YOUR TURN &mdash; WHAT HAPPENS NEXT?
           </div>
-          {parentRecordedBranches.length > 0 ? (
-            <BranchPicker
-              options={parentRecordedBranches.map((n) => ({
-                id: n.id,
-                label: n.branchLabel ?? '',
-                icon: n.branchIcon,
-              }))}
-              onPick={pickRecordedBranch}
-            />
-          ) : (
-            <BranchPicker
-              options={fallbackChoices.map((t) => ({ id: t, label: t }))}
-              onPick={(id) => pickFallback(id)}
-            />
-          )}
+          <BranchPicker options={allOptions} onPick={onPickOption} />
           <button
             onClick={reset}
             className="mt-4 text-xs text-muted hover:text-ink underline font-display"

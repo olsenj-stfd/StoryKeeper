@@ -16,6 +16,9 @@ export const CURATED_BRANCHES = [
   "The path forked — one way bright, one way mossy and cool.",
 ];
 
-export function pickThreeBranches(): string[] {
-  return [...CURATED_BRANCHES].sort(() => Math.random() - 0.5).slice(0, 3);
+export function pickBranches(n: number = 4): string[] {
+  return [...CURATED_BRANCHES].sort(() => Math.random() - 0.5).slice(0, n);
 }
+
+// Legacy alias — prefer pickBranches(n) for new code.
+export const pickThreeBranches = () => pickBranches(3);
