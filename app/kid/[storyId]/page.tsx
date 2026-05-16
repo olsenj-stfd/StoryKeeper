@@ -8,6 +8,7 @@ import { SketchedBubble } from '@/components/SketchedBubble';
 import { BranchPicker } from '@/components/BranchPicker';
 import { CharacterPills, ThemePills } from '@/components/CharacterPills';
 import { pickBranches } from '@/lib/branches';
+import { indexStoryNow } from '@/lib/indexing';
 
 const TARGET_OPTION_COUNT = 4;
 
@@ -95,6 +96,10 @@ export default function KidStoryPage({
     setPath([...path, node.id]);
     setFallbackChoices(pickBranches(TARGET_OPTION_COUNT));
     await data.setSession({ storyId, currentNodeId: node.id, updatedAt: Date.now() });
+    // New kid content — re-index so the bible picks up any new characters /
+    // themes the kid introduced. Fire and forget; the IDB notify path will
+    // refresh the panel when it lands.
+    void indexStoryNow(storyId);
   };
 
   // Always surface at least TARGET_OPTION_COUNT options. Start with the parent-recorded

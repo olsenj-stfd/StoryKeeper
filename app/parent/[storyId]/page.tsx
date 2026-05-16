@@ -7,6 +7,7 @@ import type { StoryNode, Story, StoryBible } from '@/lib/types';
 import { Bubble } from '@/components/Bubble';
 import { RecordButton } from '@/components/RecordButton';
 import { StoryBiblePanel } from '@/components/StoryBiblePanel';
+import { indexStoryNow } from '@/lib/indexing';
 
 type DraftKind = 'voice' | 'prompt';
 
@@ -112,18 +113,8 @@ export default function ParentStoryPage({
   const indexStory = async () => {
     setLoadingIndex(true);
     try {
-      const transcript = nodes
-        .filter((n) => n.text)
-        .map((n) => `${n.who}: ${n.text}`)
-        .join('\n');
-      const r = await fetch('/api/ai/index', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ storyId, transcript }),
-      });
-      const j = (await r.json()) as StoryBible;
-      await data.setStoryBible(j);
-      setBible(j);
+      const j = await indexStoryNow(storyId);
+      if (j) setBible(j);
     } finally {
       setLoadingIndex(false);
     }
