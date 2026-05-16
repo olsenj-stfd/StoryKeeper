@@ -1,26 +1,149 @@
+@import url('https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Comic+Neue:wght@400;700&display=swap');
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@theme {
+  --color-cream: #fdf6ec;
+  --color-cream-soft: #fbf2e2;
+  --color-cream-deep: #f7eeda;
+  --color-ink: #2b2417;
+  --color-muted: #8a7d6b;
+  --color-line: #d8cdb6;
+  --color-parent: #b78cde;
+  --color-parent-soft: #efe1fb;
+  --color-kid: #f3c969;
+  --color-kid-soft: #fdf0c9;
+  --color-marker-parent: rgba(183, 140, 222, 0.45);
+  --color-marker-kid: rgba(243, 201, 105, 0.6);
+  --color-marker-mint: rgba(120, 200, 170, 0.4);
+  --color-marker-coral: rgba(232, 140, 110, 0.4);
+  --color-marker-loud: rgba(220, 70, 200, 0.55);
+  --font-comic: 'Comic Neue', system-ui, sans-serif;
+  --font-display: 'Architects Daughter', cursive;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: #ffffff;
+  color: var(--color-ink);
+  font-family: var(--font-comic);
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+}
+
+@keyframes pulse-record {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(198, 74, 74, 0.5); }
+  50% { box-shadow: 0 0 0 12px rgba(198, 74, 74, 0); }
+}
+.recording-anim { animation: pulse-record 1.2s infinite; }
+
+/* --- ScribbleTales (kid + landing) --- */
+
+.paper-grid {
+  background-color: #ffffff;
+  background-image: radial-gradient(rgba(43, 36, 23, 0.13) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+.sketched-box {
+  border: 2px solid var(--color-ink);
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  position: relative;
+  background: #ffffff;
+  z-index: 1;
+  display: block;
+}
+.sketched-box::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  top: 4px; left: -4px; right: 4px; bottom: -4px;
+  background: var(--color-marker-mint);
+  border-radius: 15px 225px 15px 255px / 255px 15px 225px 15px;
+  z-index: -1;
+  transform: rotate(-1.5deg);
+}
+.sketched-box.marker-parent::before { background: var(--color-marker-parent); }
+.sketched-box.marker-kid::before {
+  background: var(--color-marker-kid);
+  top: -2px; left: 6px; right: -2px; bottom: 6px;
+  transform: rotate(1.5deg);
+}
+.sketched-box.marker-coral::before { background: var(--color-marker-coral); }
+.sketched-box.marker-mint::before { background: var(--color-marker-mint); }
+
+.sketched-btn {
+  background: #ffffff;
+  border: 2px solid var(--color-ink);
+  border-radius: 255px 15px 225px 15px / 255px 225px 15px 255px;
+  padding: 8px 18px;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: var(--color-ink);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  z-index: 1;
+}
+.sketched-btn::before {
+  content: '';
+  position: absolute;
+  top: 2px; left: -2px; right: 2px; bottom: -2px;
+  background: var(--color-marker-parent);
+  border-radius: 255px 15px 225px 15px / 255px 225px 15px 255px;
+  z-index: -1;
+}
+.sketched-btn.marker-kid::before { background: var(--color-marker-kid); }
+.sketched-btn.marker-mint::before { background: var(--color-marker-mint); }
+
+.marker-highlight {
+  position: relative;
+  display: inline-block;
+  font-family: var(--font-display);
+}
+.marker-highlight::after {
+  content: '';
+  position: absolute;
+  bottom: 0px;
+  left: -7%;
+  width: 114%;
+  height: 60%;
+  background: var(--color-marker-loud);
+  z-index: -1;
+  transform: rotate(-2.2deg) skew(-3deg);
+  border-radius: 8px 30px 4px 22px;
+}
+.marker-highlight.kid::after { background: var(--color-marker-kid); }
+.marker-highlight.mint::after { background: var(--color-marker-mint); }
+.marker-highlight.coral::after { background: var(--color-marker-coral); }
+.marker-highlight.calm::after { background: var(--color-marker-parent); height: 14px; transform: rotate(-1deg); border-radius: 3px 20px 3px 20px; }
+
+.annotation {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  line-height: 1.1;
+}
+.annotation.ink { color: var(--color-ink); font-weight: bold; }
+
+.panel-img-dashed {
+  border: 1.5px dashed var(--color-ink);
+  border-radius: 15px 225px 15px 255px / 255px 15px 225px 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.sketch-svg {
+  width: 60%;
+  height: 80%;
+  max-width: 110px;
+  stroke: var(--color-ink);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
 }
