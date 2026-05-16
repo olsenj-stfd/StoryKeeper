@@ -207,6 +207,18 @@ export const idbAdapter: DataAdapter = {
     return story;
   },
 
+  async updateStory(storyId, patch) {
+    const existing = await get<Story>(STORES.stories, storyId);
+    if (!existing) return;
+    const updated: Story = {
+      ...existing,
+      ...(patch.title !== undefined ? { title: patch.title } : {}),
+    };
+    await put(STORES.stories, updated);
+    notify(storyId);
+    notifyAll();
+  },
+
   async listNodes(storyId) {
     if (typeof window === 'undefined') return [];
     await ensureSeed();

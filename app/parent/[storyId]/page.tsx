@@ -120,11 +120,24 @@ export default function ParentStoryPage({
   return (
     <>
       <header className="px-5 pt-4 pb-3 border-b border-dashed border-line bg-white flex justify-between items-end gap-4">
-        <div>
+        <div className="flex-1 min-w-0">
           <div className="annotation">STORYKEEPER &middot; PARENT</div>
-          <div className="text-xl font-semibold mt-1">{story?.title ?? 'Loading…'}</div>
+          <input
+            value={story?.title ?? ''}
+            onChange={(e) => setStory((s) => (s ? { ...s, title: e.target.value } : s))}
+            onBlur={(e) => {
+              if (story) {
+                void data.updateStory(storyId, { title: e.target.value.trim() });
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+            }}
+            placeholder="Name this story…"
+            className="text-xl font-semibold mt-1 w-full bg-transparent outline-none border-b border-transparent focus:border-parent placeholder:text-muted placeholder:italic"
+          />
         </div>
-        <Link href="/" className="annotation hover:text-ink">
+        <Link href="/" className="annotation hover:text-ink shrink-0">
           &larr; SWITCH
         </Link>
       </header>

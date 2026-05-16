@@ -16,6 +16,7 @@ export type DataAdapter = {
   getStory(storyId: string): Promise<Story | null>;
   listStoriesByWorld(worldId: string): Promise<Story[]>;
   createStory(input: { worldId: string; title: string }): Promise<Story>;
+  updateStory(storyId: string, patch: { title?: string }): Promise<void>;
 
   // Nodes
   listNodes(storyId: string): Promise<StoryNode[]>;

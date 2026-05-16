@@ -24,7 +24,10 @@ export default function KidLibrary() {
     const storyMap: Record<string, Story[]> = {};
     const bibleMap: Record<string, StoryBible | null> = {};
     for (const w of ws) {
-      const stories = await data.listStoriesByWorld(w.id);
+      // Hide untitled stories from the kid — they're parent works-in-progress.
+      const stories = (await data.listStoriesByWorld(w.id)).filter(
+        (s) => s.title.trim().length > 0,
+      );
       storyMap[w.id] = stories;
       for (const s of stories) {
         bibleMap[s.id] = await data.getStoryBible(s.id);

@@ -18,8 +18,6 @@ export default function ParentLibrary() {
   const [worlds, setWorlds] = useState<World[]>([]);
   const [storiesByWorld, setStoriesByWorld] = useState<Record<string, Story[]>>({});
   const [newWorldName, setNewWorldName] = useState('');
-  const [newStoryFor, setNewStoryFor] = useState<string | null>(null);
-  const [newStoryTitle, setNewStoryTitle] = useState('');
   const [creatingWorld, setCreatingWorld] = useState(false);
 
   const refresh = useCallback(async () => {
@@ -43,14 +41,8 @@ export default function ParentLibrary() {
     setCreatingWorld(false);
   };
 
-  const addStory = async (worldId: string) => {
-    if (!newStoryTitle.trim()) return;
-    const story = await data.createStory({
-      worldId,
-      title: newStoryTitle.trim(),
-    });
-    setNewStoryTitle('');
-    setNewStoryFor(null);
+  const recordNewStory = async (worldId: string) => {
+    const story = await data.createStory({ worldId, title: '' });
     router.push(`/parent/${story.id}`);
   };
 
@@ -81,50 +73,24 @@ export default function ParentLibrary() {
               <div className="annotation absolute -top-4 left-5">
                 WORLD {wi + 1}
               </div>
-              <div className="flex items-baseline justify-between gap-2 mb-3">
-                <div>
-                  <div className="font-display text-xl">{w.name}</div>
-                  {w.description && (
-                    <div className="text-sm text-muted mt-0.5">
-                      {w.description}
-                    </div>
-                  )}
-                </div>
-                <button
-                  onClick={() =>
-                    setNewStoryFor(newStoryFor === w.id ? null : w.id)
-                  }
-                  className="annotation hover:text-ink whitespace-nowrap"
-                  type="button"
-                >
-                  {newStoryFor === w.id ? 'CANCEL' : '+ NEW STORY'}
-                </button>
+              <div className="mb-3">
+                <div className="font-display text-xl">{w.name}</div>
+                {w.description && (
+                  <div className="text-sm text-muted mt-0.5">
+                    {w.description}
+                  </div>
+                )}
               </div>
 
-              {newStoryFor === w.id && (
-                <div className="flex gap-2 mb-3">
-                  <input
-                    autoFocus
-                    value={newStoryTitle}
-                    onChange={(e) => setNewStoryTitle(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && addStory(w.id)}
-                    placeholder="Story title"
-                    className="flex-1 rounded-lg border-2 border-ink/60 bg-white px-3 py-2 text-sm"
-                  />
-                  <button
-                    onClick={() => addStory(w.id)}
-                    disabled={!newStoryTitle.trim()}
-                    className="sketched-btn marker-kid disabled:opacity-50"
-                    type="button"
-                  >
-                    CREATE
-                  </button>
-                </div>
-              )}
+              <button
+                onClick={() => recordNewStory(w.id)}
+                type="button"
+                className="sketched-btn marker-kid mb-4"
+              >
+                + RECORD NEW STORY
+              </button>
 
-              {stories.length === 0 ? (
-                <div className="text-sm text-muted italic">No stories yet.</div>
-              ) : (
+              {stories.length > 0 && (
                 <div className="grid sm:grid-cols-2 gap-3">
                   {stories.map((s) => (
                     <Link
@@ -132,7 +98,11 @@ export default function ParentLibrary() {
                       href={`/parent/${s.id}`}
                       className="bg-white border-2 border-ink/70 rounded-lg px-3 py-2.5 hover:border-ink transition"
                     >
-                      <div className="font-bold text-sm">{s.title}</div>
+                      <div className="font-bold text-sm">
+                        {s.title.trim() || (
+                          <span className="text-muted italic">Untitled story</span>
+                        )}
+                      </div>
                       <div className="annotation mt-1">TAP TO EDIT &rarr;</div>
                     </Link>
                   ))}
