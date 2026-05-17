@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { data } from '@/lib/data';
 import type { Story, World } from '@/lib/types';
+import { useModeLabels } from '@/lib/mode';
 
 const HUE_MARKER: Record<string, string> = {
   kid: 'marker-kid',
@@ -15,6 +16,7 @@ const HUE_MARKER: Record<string, string> = {
 
 export default function ParentLibrary() {
   const router = useRouter();
+  const labels = useModeLabels();
   const [worlds, setWorlds] = useState<World[]>([]);
   const [storiesByWorld, setStoriesByWorld] = useState<Record<string, Story[]>>({});
   const [newWorldName, setNewWorldName] = useState('');
@@ -56,9 +58,15 @@ export default function ParentLibrary() {
     <div className="flex flex-col flex-1 paper-grid px-5 py-6">
       <header className="flex justify-between items-end mb-6 max-w-2xl w-full mx-auto pb-3 border-b border-dashed border-ink/30">
         <div>
-          <div className="annotation">STORYKEEPER &middot; PARENT &middot; LIBRARY</div>
+          <div className="annotation">
+            {labels.brand.toUpperCase()} &middot; {labels.storytellerUpper}{' '}
+            &middot; LIBRARY
+          </div>
           <div className="font-display text-2xl mt-1">
-            <span className="marker-highlight">YOUR</span> STORIES
+            <span className="marker-highlight">
+              {labels.libraryLabel.split(' ')[0].toUpperCase()}
+            </span>{' '}
+            {labels.libraryLabel.split(' ').slice(1).join(' ').toUpperCase()}
           </div>
         </div>
         <Link href="/" className="annotation hover:text-ink">

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { data } from '@/lib/data';
 import type { Story, StoryBible, World } from '@/lib/types';
 import { CharacterPills } from '@/components/CharacterPills';
+import { useModeLabels } from '@/lib/mode';
 
 const HUE_MARKER: Record<string, string> = {
   kid: 'marker-kid',
@@ -14,6 +15,7 @@ const HUE_MARKER: Record<string, string> = {
 };
 
 export default function KidLibrary() {
+  const labels = useModeLabels();
   const [worlds, setWorlds] = useState<World[]>([]);
   const [storiesByWorld, setStoriesByWorld] = useState<Record<string, Story[]>>({});
   const [bibles, setBibles] = useState<Record<string, StoryBible | null>>({});
@@ -52,7 +54,9 @@ export default function KidLibrary() {
             <br />
             KEEPER
           </div>
-          <div className="annotation mt-2">your library</div>
+          <div className="annotation mt-2">
+            {labels.listener.toLowerCase()}&rsquo;s library
+          </div>
         </div>
         <Link href="/" className="annotation hover:text-ink">
           &larr; SWITCH

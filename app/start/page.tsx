@@ -1,21 +1,35 @@
+'use client';
+
 import Link from 'next/link';
+import { useMode, useModeLabels } from '@/lib/mode';
 
 export default function StartPage() {
+  const mode = useMode();
+  const labels = useModeLabels();
+  const isFamily = mode === 'family';
+
   return (
     <div className="flex flex-col flex-1 paper-grid px-5 py-6">
       <header className="flex justify-between items-start mb-6 max-w-md w-full mx-auto">
         <div>
-          <div className="annotation">STORYKEEPER &middot; WHO&rsquo;S HERE</div>
-          <h1 className="font-display text-3xl mt-2 leading-tight">
-            <span className="marker-highlight">WHO</span> IS USING
-            <br />
-            STORYKEEPER?
+          <div className="annotation">
+            {labels.brand.toUpperCase()} &middot; WHO&rsquo;S HERE
+          </div>
+          <h1
+            className={
+              isFamily
+                ? 'text-3xl mt-2 leading-tight font-semibold'
+                : 'font-display text-3xl mt-2 leading-tight'
+            }
+          >
+            <span className="marker-highlight">WHO</span> IS USING{' '}
+            {labels.brand.toUpperCase()}?
           </h1>
         </div>
       </header>
 
       <div className="flex justify-between items-baseline mb-8 px-1 max-w-md w-full mx-auto">
-        <div className="annotation">FILE: STORYKEEPER_001</div>
+        <div className="annotation">FILE: {labels.brand.toUpperCase()}_001</div>
         <div className="annotation ink">AUTHOR: YOU</div>
       </div>
 
@@ -24,7 +38,7 @@ export default function StartPage() {
           href="/kid"
           className="sketched-box marker-kid block px-4 py-5 relative self-start w-[92%]"
         >
-          <div className="annotation absolute -top-4 left-5">FIG 1. THE LISTENER</div>
+          <div className="annotation absolute -top-4 left-5">FIG 1. THE {labels.listenerUpper}</div>
           <div className="panel-img-dashed h-32 mb-3">
             <svg viewBox="0 0 100 100" className="sketch-svg">
               <path d="M 15 60 Q 15 25, 50 25 Q 85 25, 85 60" />
@@ -35,12 +49,17 @@ export default function StartPage() {
               <circle cx="76" cy="51" r="3.5" />
             </svg>
           </div>
-          <div className="font-display text-xl">
-            I&rsquo;M THE <span className="marker-highlight kid">KID</span>
+          <div
+            className={
+              isFamily ? 'text-xl font-semibold' : 'font-display text-xl'
+            }
+          >
+            I&rsquo;M THE{' '}
+            <span className="marker-highlight kid">
+              {labels.listenerUpper}
+            </span>
           </div>
-          <div className="text-sm font-bold mt-1">
-            Hear your story. Pick what happens next.
-          </div>
+          <div className="text-sm font-bold mt-1">{labels.listenHint}</div>
           <div className="annotation ink absolute -bottom-5 right-3">TAP ME! &rarr;</div>
         </Link>
 
@@ -48,7 +67,7 @@ export default function StartPage() {
           href="/parent"
           className="sketched-box marker-parent block px-4 py-5 relative self-end w-[92%]"
         >
-          <div className="annotation absolute -top-4 left-5">FIG 2. THE STORYTELLER</div>
+          <div className="annotation absolute -top-4 left-5">FIG 2. THE {labels.storytellerUpper}</div>
           <div className="panel-img-dashed h-32 mb-3">
             <svg viewBox="0 0 100 100" className="sketch-svg">
               <rect x="40" y="18" width="20" height="38" rx="10" ry="10" />
@@ -60,12 +79,15 @@ export default function StartPage() {
               <line x1="45" y1="46" x2="55" y2="46" />
             </svg>
           </div>
-          <div className="font-display text-xl">
-            I&rsquo;M THE <span className="marker-highlight">PARENT</span>
+          <div
+            className={
+              isFamily ? 'text-xl font-semibold' : 'font-display text-xl'
+            }
+          >
+            I&rsquo;M THE{' '}
+            <span className="marker-highlight">{labels.storytellerUpper}</span>
           </div>
-          <div className="text-sm font-bold mt-1">
-            Record the next part of the story.
-          </div>
+          <div className="text-sm font-bold mt-1">{labels.tellerHint}</div>
         </Link>
       </div>
     </div>

@@ -8,6 +8,7 @@ import { Bubble } from '@/components/Bubble';
 import { RecordButton } from '@/components/RecordButton';
 import { StoryBiblePanel } from '@/components/StoryBiblePanel';
 import { indexStoryNow } from '@/lib/indexing';
+import { useModeLabels } from '@/lib/mode';
 
 export default function ParentStoryPage({
   params,
@@ -15,6 +16,7 @@ export default function ParentStoryPage({
   params: Promise<{ storyId: string }>;
 }) {
   const { storyId } = use(params);
+  const labels = useModeLabels();
   const [story, setStory] = useState<Story | null>(null);
   const [nodes, setNodes] = useState<StoryNode[]>([]);
   const [bible, setBible] = useState<StoryBible | null>(null);
@@ -127,7 +129,9 @@ export default function ParentStoryPage({
     <>
       <header className="px-5 pt-4 pb-3 border-b border-dashed border-line bg-white flex justify-between items-end gap-4">
         <div className="flex-1 min-w-0">
-          <div className="annotation">STORYKEEPER &middot; PARENT</div>
+          <div className="annotation">
+            {labels.brand.toUpperCase()} &middot; {labels.storytellerUpper}
+          </div>
           <input
             value={story?.title ?? ''}
             onChange={(e) => setStory((s) => (s ? { ...s, title: e.target.value } : s))}
