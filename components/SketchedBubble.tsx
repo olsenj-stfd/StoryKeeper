@@ -52,6 +52,15 @@ export function SketchedBubble({
         <div className="annotation ink absolute -top-4 right-4">YOUR TURN</div>
         <div className="sketched-box marker-kid px-5 py-4">
           <div className="text-right font-bold">{node.text}</div>
+          <div className="flex justify-end mt-3">
+            <button onClick={toggle} className="sketched-btn marker-mint" type="button">
+              {playing ? (
+                <><span>⏸</span> PAUSE</>
+              ) : (
+                <><span>▶</span> READ IT</>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     );
