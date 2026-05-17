@@ -25,6 +25,10 @@ export type DataAdapter = {
     node: Omit<StoryNode, 'id' | 'createdAt' | 'audioUrl'>,
     audioBlob?: Blob,
   ): Promise<StoryNode>;
+  updateNode(
+    nodeId: string,
+    patch: Partial<Pick<StoryNode, 'branchLabel' | 'text' | 'branchIcon'>>,
+  ): Promise<void>;
 
   // Session (kid's place in a story)
   getSession(storyId: string): Promise<Session | null>;

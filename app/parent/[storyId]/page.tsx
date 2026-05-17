@@ -9,8 +9,6 @@ import { RecordButton } from '@/components/RecordButton';
 import { StoryBiblePanel } from '@/components/StoryBiblePanel';
 import { indexStoryNow } from '@/lib/indexing';
 
-type DraftKind = 'voice' | 'prompt';
-
 export default function ParentStoryPage({
   params,
 }: {
@@ -22,11 +20,7 @@ export default function ParentStoryPage({
   const [bible, setBible] = useState<StoryBible | null>(null);
   const [selectedParentId, setSelectedParentId] = useState<string | null>(null);
   const [who, setWho] = useState('Mom');
-  const [text, setText] = useState('');
-  const [branchLabel, setBranchLabel] = useState('');
-  const [kind, setKind] = useState<DraftKind>('voice');
-  const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [loadingBranches, setLoadingBranches] = useState(false);
+  const [notes, setNotes] = useState('');
   const [loadingIndex, setLoadingIndex] = useState(false);
   const [noSpeech, setNoSpeech] = useState(false);
 
@@ -59,58 +53,7 @@ export default function ParentStoryPage({
 
   const siblings = nodes.filter((n) => n.parentNodeId === selectedParentId);
 
-  const saveAudioNode = async (blob: Blob, transcript: string) => {
-    if (!selectedParentId && nodes.length > 0) {
-      alert('Tap a bubble above to choose where this attaches.');
-      return;
-    }
-    const summary = text.trim();
-    const cleanTranscript = transcript.trim();
-    // Prefer typed summary; fall back to transcript; final fallback is a generic line.
-    const nodeText =
-      summary ||
-      cleanTranscript ||
-      `(${who} recorded the next part of the story.)`;
-    const node = await data.appendNode(
-      {
-        storyId,
-        parentNodeId: selectedParentId,
-        type: kind,
-        who,
-        text: nodeText,
-        branchLabel: branchLabel.trim() || null,
-        branchIcon: null,
-        orderIndex: siblings.length,
-      },
-      blob,
-    );
-    setText('');
-    setBranchLabel('');
-    setSelectedParentId(node.id);
-    // Fire-and-forget: re-index the story so the bible stays fresh.
-    void indexStory();
-  };
-
-  const fetchAiSuggestions = async () => {
-    setLoadingBranches(true);
-    try {
-      const transcript = nodes
-        .filter((n) => n.text)
-        .map((n) => `${n.who}: ${n.text}`)
-        .join('\n');
-      const r = await fetch('/api/ai/branches', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ transcript }),
-      });
-      const j = await r.json();
-      setSuggestions(j.branches ?? []);
-    } finally {
-      setLoadingBranches(false);
-    }
-  };
-
-  const indexStory = async () => {
+  const indexStory = useCallback(async () => {
     setLoadingIndex(true);
     try {
       const j = await indexStoryNow(storyId);
@@ -118,6 +61,66 @@ export default function ParentStoryPage({
     } finally {
       setLoadingIndex(false);
     }
+  }, [storyId]);
+
+  // After saving a node, ask Claude (background) to generate a short
+  // branch label from the transcript/summary. Parent doesn't have to
+  // type anything; the label appears within seconds.
+  const autoLabelNode = useCallback(
+    async (nodeId: string, transcript: string, summary: string) => {
+      try {
+        const storyContext = nodes
+          .filter((n) => n.text)
+          .map((n) => `${n.who}: ${n.text}`)
+          .join('\n');
+        const r = await fetch('/api/ai/label', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ transcript, summary, storyContext }),
+        });
+        const j = await r.json();
+        const label = String(j.branchLabel ?? '').trim();
+        if (label) {
+          await data.updateNode(nodeId, { branchLabel: label });
+        }
+      } catch {
+        /* leave label blank if it fails — the bubble still works */
+      }
+    },
+    [nodes],
+  );
+
+  const saveAudioNode = async (blob: Blob, transcript: string) => {
+    if (!selectedParentId && nodes.length > 0) {
+      alert('Tap a bubble above to choose where this attaches.');
+      return;
+    }
+    const summary = notes.trim();
+    const cleanTranscript = transcript.trim();
+    // Prefer transcript (full content) for AI text; fall back to typed notes;
+    // last resort is a generic line.
+    const nodeText =
+      cleanTranscript ||
+      summary ||
+      `(${who} recorded the next part of the story.)`;
+    const node = await data.appendNode(
+      {
+        storyId,
+        parentNodeId: selectedParentId,
+        type: 'voice',
+        who,
+        text: nodeText,
+        branchLabel: null, // AI labels in background, parent edits later
+        branchIcon: null,
+        orderIndex: siblings.length,
+      },
+      blob,
+    );
+    setNotes('');
+    setSelectedParentId(node.id);
+    // Fire-and-forget: re-index the story and auto-label the new node.
+    void indexStory();
+    void autoLabelNode(node.id, cleanTranscript, summary);
   };
 
   return (
@@ -164,13 +167,21 @@ export default function ParentStoryPage({
                   setSelectedParentId(n.id);
                 }
               }}
-              className={`rounded-2xl p-1 transition cursor-pointer flex ${
+              className={`rounded-2xl p-1 transition cursor-pointer flex flex-col ${
                 selectedParentId === n.id
                   ? 'ring-2 ring-parent'
                   : 'opacity-80 hover:opacity-100'
-              } ${n.type === 'kid_text' ? 'justify-end' : 'justify-start'}`}
+              } ${n.type === 'kid_text' ? 'items-end' : 'items-start'}`}
             >
               <Bubble node={n} />
+              {n.type === 'voice' && (
+                <InlineLabelEditor
+                  node={n}
+                  onSave={(label) =>
+                    data.updateNode(n.id, { branchLabel: label.trim() || null })
+                  }
+                />
+              )}
             </div>
           ))}
         </div>
@@ -180,29 +191,14 @@ export default function ParentStoryPage({
         <div className="max-w-3xl mx-auto space-y-3">
           {noSpeech && (
             <div className="bg-kid-soft border-2 border-ink/40 rounded-xl px-3 py-2.5 text-sm">
-              <strong>This device can&rsquo;t auto-transcribe.</strong> Type a
-              summary in the field below before tapping Record so the AI can
-              read your story.
+              <strong>This device can&rsquo;t auto-transcribe.</strong> Jot a
+              one-line note below before tapping Record so the AI has something
+              to read and label.
             </div>
           )}
 
-          <div className="flex items-center gap-2">
-            <div className="text-[12px] tracking-[0.16em] uppercase text-muted">
-              {kind === 'voice' ? 'Add the next part' : 'Record a choice prompt'}
-            </div>
-            <div className="ml-auto flex gap-1 bg-[#ece2cf] rounded-full p-1 text-sm">
-              {(['voice', 'prompt'] as DraftKind[]).map((k) => (
-                <button
-                  key={k}
-                  onClick={() => setKind(k)}
-                  className={`px-3 py-1 rounded-full ${
-                    kind === k ? 'bg-white' : 'text-muted'
-                  }`}
-                >
-                  {k === 'voice' ? 'Story' : 'Branch'}
-                </button>
-              ))}
-            </div>
+          <div className="text-[12px] tracking-[0.16em] uppercase text-muted">
+            Add the next part
           </div>
 
           <div className="grid sm:grid-cols-[120px_1fr] gap-2">
@@ -213,62 +209,63 @@ export default function ParentStoryPage({
               className="rounded-lg border border-line bg-white px-3 py-2 text-sm"
             />
             <input
-              value={text}
-              onChange={(e) => setText(e.target.value)}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
               placeholder={
-                kind === 'voice'
-                  ? noSpeech
-                    ? 'Summary of what you recorded (required for indexing on this device)'
-                    : 'A one-line summary (helps AI indexing)'
-                  : 'What is the question?'
+                noSpeech
+                  ? 'One-line note (used as the transcript on this device)'
+                  : 'Optional one-line note (AI fills in from your voice)'
               }
               className={`rounded-lg border bg-white px-3 py-2 text-sm ${
-                noSpeech && kind === 'voice'
-                  ? 'border-2 border-ink/60'
-                  : 'border-line'
+                noSpeech ? 'border-2 border-ink/60' : 'border-line'
               }`}
             />
           </div>
 
-          {kind === 'voice' && (
-            <input
-              value={branchLabel}
-              onChange={(e) => setBranchLabel(e.target.value)}
-              placeholder="Branch label (optional, e.g. &lsquo;the adventure path&rsquo;)"
-              className="w-full rounded-lg border border-line bg-white px-3 py-2 text-sm"
-            />
-          )}
-
-          <div className="flex justify-between items-center gap-3 flex-wrap">
-            <button
-              onClick={fetchAiSuggestions}
-              disabled={loadingBranches}
-              type="button"
-              className="text-sm text-parent underline hover:no-underline disabled:opacity-60"
-            >
-              {loadingBranches ? 'Thinking…' : 'Suggest branches'}
-            </button>
+          <div className="flex justify-end">
             <RecordButton onRecorded={saveAudioNode} />
           </div>
 
-          {suggestions.length > 0 && (
-            <div className="bg-parent-soft border border-parent/30 rounded-xl p-3 space-y-1.5">
-              <div className="text-[11px] tracking-[0.16em] uppercase text-muted mb-1">
-                Ideas (tap to use as the branch label)
-              </div>
-              {suggestions.map((s, i) => (
-                <button
-                  key={i}
-                  onClick={() => setBranchLabel(s)}
-                  className="block w-full text-left text-sm bg-white/60 rounded px-2 py-1.5 hover:bg-white"
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
-          )}
+          <div className="text-[11px] text-muted text-right italic">
+            Branch labels are auto-generated. Tap a bubble&rsquo;s label above to
+            edit it.
+          </div>
         </div>
       </footer>
     </>
+  );
+}
+
+function InlineLabelEditor({
+  node,
+  onSave,
+}: {
+  node: StoryNode;
+  onSave: (label: string) => Promise<void> | void;
+}) {
+  const [value, setValue] = useState(node.branchLabel ?? '');
+  useEffect(() => {
+    setValue(node.branchLabel ?? '');
+  }, [node.branchLabel]);
+
+  return (
+    <input
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+      onBlur={() => {
+        if ((node.branchLabel ?? '') !== value) {
+          void onSave(value);
+        }
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+      }}
+      placeholder={
+        node.branchLabel === null
+          ? 'AI is labeling this…'
+          : 'Branch label (tap to edit)'
+      }
+      className="mt-1.5 max-w-[85%] text-xs font-display tracking-wide bg-transparent border-b border-dashed border-line focus:border-parent focus:outline-none px-1 placeholder:italic placeholder:text-muted"
+    />
   );
 }

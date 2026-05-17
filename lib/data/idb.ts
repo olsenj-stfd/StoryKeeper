@@ -252,6 +252,20 @@ export const idbAdapter: DataAdapter = {
     return nodes;
   },
 
+  async updateNode(nodeId, patch) {
+    const existing = await get<StoryNode>(STORES.nodes, nodeId);
+    if (!existing) return;
+    const updated: StoryNode = {
+      ...existing,
+      ...(patch.branchLabel !== undefined ? { branchLabel: patch.branchLabel } : {}),
+      ...(patch.text !== undefined ? { text: patch.text } : {}),
+      ...(patch.branchIcon !== undefined ? { branchIcon: patch.branchIcon } : {}),
+    };
+    await put(STORES.nodes, updated);
+    notify(existing.storyId);
+    notifyAll();
+  },
+
   async appendNode(input, audioBlob) {
     const id = newId('n');
     const node: StoryNode = {
