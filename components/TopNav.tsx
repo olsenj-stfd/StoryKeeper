@@ -22,6 +22,9 @@ export function TopNav() {
             SWITCH
           </Link>
         )}
+        <Link href="/about" className="annotation hover:text-ink">
+          ABOUT
+        </Link>
         <Link href="/order" className="annotation hover:text-ink">
           ORDER
         </Link>
