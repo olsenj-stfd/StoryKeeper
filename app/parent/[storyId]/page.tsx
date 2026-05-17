@@ -92,6 +92,36 @@ export default function ParentStoryPage({
     [nodes],
   );
 
+  // When we have no transcript and no typed note (iOS case), send the
+  // recorded audio to Whisper for server-side transcription, then patch
+  // the node and re-fire indexing + labeling with the real text.
+  const transcribeAndContinue = useCallback(
+    async (nodeId: string, blob: Blob) => {
+      try {
+        const fd = new FormData();
+        fd.append('audio', blob, 'recording');
+        const r = await fetch('/api/ai/transcribe', {
+          method: 'POST',
+          body: fd,
+        });
+        const j = (await r.json()) as { transcript?: string; source?: string };
+        const text = String(j.transcript ?? '').trim();
+        if (text) {
+          await data.updateNode(nodeId, { text });
+          void autoLabelNode(nodeId, text, '');
+          void indexStory();
+        } else {
+          // No transcript came back (e.g., no OPENAI_API_KEY set) — index
+          // anyway with the generic fallback so the panel doesn't hang.
+          void indexStory();
+        }
+      } catch {
+        void indexStory();
+      }
+    },
+    [autoLabelNode, indexStory],
+  );
+
   const saveAudioNode = async (blob: Blob, transcript: string) => {
     if (!selectedParentId && nodes.length > 0) {
       alert('Tap a bubble above to choose where this attaches.');
@@ -99,8 +129,9 @@ export default function ParentStoryPage({
     }
     const summary = notes.trim();
     const cleanTranscript = transcript.trim();
-    // Prefer transcript (full content) for AI text; fall back to typed notes;
-    // last resort is a generic line.
+    const needsWhisper = !cleanTranscript && !summary;
+    // Prefer transcript (full content); fall back to typed notes; last
+    // resort is a generic line we'll later overwrite from Whisper.
     const nodeText =
       cleanTranscript ||
       summary ||
@@ -112,7 +143,7 @@ export default function ParentStoryPage({
         type: 'voice',
         who,
         text: nodeText,
-        branchLabel: null, // AI labels in background, parent edits later
+        branchLabel: null,
         branchIcon: null,
         orderIndex: siblings.length,
       },
@@ -120,9 +151,16 @@ export default function ParentStoryPage({
     );
     setNotes('');
     setSelectedParentId(node.id);
-    // Fire-and-forget: re-index the story and auto-label the new node.
-    void indexStory();
-    void autoLabelNode(node.id, cleanTranscript, summary);
+
+    if (needsWhisper) {
+      // Defer labeling + indexing until Whisper returns. Otherwise the
+      // bible would be generated from the useless "(Mom recorded...)"
+      // fallback.
+      void transcribeAndContinue(node.id, blob);
+    } else {
+      void indexStory();
+      void autoLabelNode(node.id, cleanTranscript || summary, summary);
+    }
   };
 
   return (
