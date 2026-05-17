@@ -1,4 +1,4 @@
-# StoryKeeper
+# Moonjar Stories
 
 A storytelling app for kids whose parents work away from home — military, pilots,
 consultants. Parents record story segments and branch options; kids pick up

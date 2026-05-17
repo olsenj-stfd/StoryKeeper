@@ -50,9 +50,9 @@ export default function KidLibrary() {
       <header className="flex justify-between items-start mb-6 max-w-md w-full mx-auto">
         <div>
           <div className="font-display text-2xl leading-none">
-            <span className="marker-highlight">STORY</span>
+            <span className="marker-highlight">MOONJAR</span>
             <br />
-            KEEPER
+            STORIES
           </div>
           <div className="annotation mt-2">
             {labels.listener.toLowerCase()}&rsquo;s library

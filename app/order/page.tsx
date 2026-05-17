@@ -44,7 +44,7 @@ export default function OrderPage() {
   return (
     <div className="flex-1 px-5 py-6 max-w-2xl w-full mx-auto">
       <header className="mb-6 pb-3 border-b border-dashed border-ink/40">
-        <div className="annotation">STORYKEEPER &middot; ORDER</div>
+        <div className="annotation">MOONJAR STORIES &middot; ORDER</div>
         <div className="font-display text-2xl mt-1">
           Turn a story into a <span className="marker-highlight kid">BOOK</span>
         </div>

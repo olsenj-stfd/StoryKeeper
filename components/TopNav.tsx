@@ -13,8 +13,8 @@ export function TopNav() {
         className="font-display text-base tracking-wide leading-none"
         aria-label="Home"
       >
-        <span className="marker-highlight">STORY</span>
-        <span className="ml-0.5">KEEPER</span>
+        <span className="marker-highlight">MOONJAR</span>
+        <span className="ml-1">STORIES</span>
       </Link>
       <div className="flex gap-3">
         {!isHome && (

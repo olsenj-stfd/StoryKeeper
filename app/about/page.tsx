@@ -4,9 +4,9 @@ export default function AboutPage() {
   return (
     <div className="flex-1 px-5 py-8 max-w-2xl w-full mx-auto paper-grid">
       <header className="mb-8 pb-3 border-b border-dashed border-ink/40">
-        <div className="annotation">STORYKEEPER &middot; ABOUT</div>
+        <div className="annotation">MOONJAR STORIES &middot; ABOUT</div>
         <h1 className="font-display text-3xl mt-2 leading-tight">
-          Why we built <span className="marker-highlight">STORYKEEPER</span>
+          Why we built <span className="marker-highlight">MOONJAR STORIES</span>
         </h1>
       </header>
 
@@ -19,7 +19,7 @@ export default function AboutPage() {
           experiences in early childhood.
         </p>
         <p>
-          StoryKeeper keeps it going. The parent records when they can; the kid
+          Moonjar Stories keeps it going. The parent records when they can; the kid
           listens, picks what happens next, and over time the story becomes a
           keepsake &mdash; eventually a real printed book.
         </p>
@@ -83,7 +83,7 @@ export default function AboutPage() {
             parents record themselves reading books to their kids for over
             three decades, reaching hundreds of thousands of children. Letters
             from those kids &mdash; read out at homecomings &mdash; make the case
-            better than any paper. StoryKeeper builds on that same insight,
+            better than any paper. Moonjar Stories builds on that same insight,
             with two additions: stories that branch and continue so the kid
             has agency, and a long-term archive so the stories become a
             keepsake.

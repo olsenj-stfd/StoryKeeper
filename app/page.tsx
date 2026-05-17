@@ -5,9 +5,9 @@ export default function Home() {
     <div className="flex flex-1 flex-col items-center px-6 py-10 paper-grid halftone-soft gap-8">
       <div className="text-center max-w-md">
         <div className="font-display text-5xl leading-tight relative inline-block">
-          <span className="marker-highlight">STORY</span>
+          <span className="marker-highlight">MOONJAR</span>
           <br />
-          KEEPER
+          STORIES
         </div>
         <div className="annotation mt-4">
           stories from your family, kept and continued
@@ -52,7 +52,7 @@ export default function Home() {
         >
           <div className="annotation absolute -top-4 left-5">MODE 2.</div>
           <div className="font-display text-2xl mb-1">
-            <span className="marker-highlight mint">FAMILY</span> STORYKEEPER
+            <span className="marker-highlight mint">FAMILY</span> STORIES
           </div>
           <div className="text-sm font-bold leading-relaxed">
             Keep your family&rsquo;s treasured stories. Record grandparents,

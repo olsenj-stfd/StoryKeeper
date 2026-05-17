@@ -1,7 +1,7 @@
 {
-  "name": "StoryKeeper",
-  "short_name": "StoryKeeper",
-  "description": "Stories from your parent, kept and continued.",
+  "name": "Moonjar Stories",
+  "short_name": "Moonjar",
+  "description": "Stories from your family, kept and continued.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#fdf6ec",

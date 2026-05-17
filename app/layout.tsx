@@ -4,8 +4,8 @@ import { TopNav } from "@/components/TopNav";
 import { ModeProvider } from "@/lib/mode";
 
 export const metadata: Metadata = {
-  title: "StoryKeeper",
-  description: "Stories from your parent, kept and continued.",
+  title: "Moonjar Stories",
+  description: "Stories from your family, kept and continued.",
   manifest: "/manifest.json",
 };
 
