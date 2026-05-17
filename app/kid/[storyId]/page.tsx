@@ -79,9 +79,17 @@ export default function KidStoryPage({
   const children = nodes
     .filter((n) => n.parentNodeId === currentId)
     .sort((a, b) => a.orderIndex - b.orderIndex);
-  const parentRecordedBranches = children.filter(
-    (n) => n.type === 'voice' && n.branchLabel,
-  );
+  // Treat every voice child as a branch option — labeled or not. Mom may have
+  // recorded multiple continuations at this node without labeling each one.
+  const parentRecordedBranches = children.filter((n) => n.type === 'voice');
+
+  const formatVoiceLabel = (n: StoryNode): string => {
+    const label = n.branchLabel?.trim();
+    if (label) return label;
+    const text = n.text?.trim();
+    if (!text) return `${n.who}'s recording`;
+    return text.length > 90 ? text.slice(0, 87) + '…' : text;
+  };
 
   const pickRecordedBranch = async (childId: string) => {
     setPath([...path, childId]);
@@ -108,13 +116,15 @@ export default function KidStoryPage({
     void indexStoryNow(storyId);
   };
 
-  // "From Mom" mode: only show what the parent actually recorded as branches.
-  // "Surprise me" mode: ask Claude for story-aware continuations that reference
-  // the existing characters/settings. Fallback to the curated pool if no key.
+  // "From Mom" mode: show all of Mom's recorded continuations first, then pad
+  // with story-aware AI continuations so there are always at least 4 options.
+  // Each option is visually tagged FROM MOM vs MADE UP so the kid can tell.
+  // "Surprise me" mode: skip Mom entirely, just AI continuations.
   const recordedOptions = parentRecordedBranches.map((n) => ({
     id: n.id,
-    label: n.branchLabel ?? '',
+    label: formatVoiceLabel(n),
     icon: n.branchIcon,
+    fromMom: true as const,
   }));
 
   const fetchSurpriseOptions = useCallback(async () => {
@@ -140,13 +150,17 @@ export default function KidStoryPage({
     }
   }, [nodes, bible]);
 
-  // Fetch surprise options when switching into surprise mode or after the
-  // path advances (so the kid gets fresh story-aware options each turn).
+  // Fetch surprise options when switching into surprise mode, when From Mom
+  // doesn't have enough on its own, or after the path advances (fresh options
+  // for the new node).
+  const needsAIFill =
+    mode === 'surprise' ||
+    (mode === 'mom' && recordedOptions.length < TARGET_OPTION_COUNT);
   useEffect(() => {
-    if (mode === 'surprise') {
+    if (needsAIFill) {
       void fetchSurpriseOptions();
     }
-  }, [mode, currentId, fetchSurpriseOptions]);
+  }, [mode, currentId, fetchSurpriseOptions, needsAIFill]);
 
   const onPickOption = (id: string) => {
     if (parentRecordedBranches.some((n) => n.id === id)) {
@@ -156,7 +170,20 @@ export default function KidStoryPage({
     }
   };
 
-  const surpriseAsOptions = surpriseOptions.map((t) => ({ id: t, label: t }));
+  const surpriseAsOptions = surpriseOptions.map((t) => ({
+    id: t,
+    label: t,
+    fromMom: false as const,
+  }));
+
+  // From Mom mode: Mom's options + AI fill to reach TARGET_OPTION_COUNT.
+  const momMixedOptions = [
+    ...recordedOptions,
+    ...surpriseAsOptions.slice(
+      0,
+      Math.max(0, TARGET_OPTION_COUNT - recordedOptions.length),
+    ),
+  ];
 
   const stopPlayAll = useCallback(() => {
     playAllCancelledRef.current = true;
@@ -325,27 +352,33 @@ export default function KidStoryPage({
           </div>
 
           {mode === 'mom' ? (
-            recordedOptions.length > 0 ? (
-              <BranchPicker options={recordedOptions} onPick={onPickOption} />
-            ) : (
-              <div className="sketched-box marker-mint p-4">
-                <div className="font-bold text-sm">
-                  No new parts yet from Mom!
+            <>
+              {momMixedOptions.length > 0 ? (
+                <BranchPicker options={momMixedOptions} onPick={onPickOption} />
+              ) : loadingSurprise ? (
+                <div className="annotation">Thinking up some ideas&hellip;</div>
+              ) : (
+                <div className="sketched-box marker-mint p-4">
+                  <div className="font-bold text-sm">
+                    Nothing recorded yet! Pulling some ideas&hellip;
+                  </div>
                 </div>
-                <div className="text-sm mt-1">
-                  Tap <span className="font-display">SURPRISE ME</span> above to
-                  invent what happens next, using the people and places already
-                  in your story.
+              )}
+              {loadingSurprise && momMixedOptions.length > 0 && (
+                <div className="annotation mt-2">
+                  Topping up with fresh ideas&hellip;
                 </div>
-              </div>
-            )
+              )}
+            </>
           ) : loadingSurprise && surpriseAsOptions.length === 0 ? (
             <div className="annotation">Thinking up some ideas&hellip;</div>
           ) : (
             <>
               <BranchPicker options={surpriseAsOptions} onPick={onPickOption} />
               {loadingSurprise && (
-                <div className="annotation mt-2">Cooking up fresh ideas&hellip;</div>
+                <div className="annotation mt-2">
+                  Cooking up fresh ideas&hellip;
+                </div>
               )}
             </>
           )}
