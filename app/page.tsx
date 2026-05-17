@@ -46,20 +46,21 @@ export default function Home() {
           <div className="annotation ink absolute -bottom-5 right-3">TAP ME! &rarr;</div>
         </Link>
 
-        <Link
-          href="/start?mode=family"
-          className="sketched-box marker-mint block px-5 py-5 relative self-end w-[94%]"
+        <div
+          aria-disabled="true"
+          className="sketched-box marker-mint block px-5 py-5 relative self-end w-[94%] opacity-70 cursor-not-allowed"
         >
           <div className="annotation absolute -top-4 left-5">MODE 2.</div>
+          <div className="annotation ink absolute -top-4 right-5">
+            COMING SOON
+          </div>
           <div className="font-display text-2xl mb-1">
             <span className="marker-highlight mint">FAMILY</span> STORIES
           </div>
-          <div className="text-sm font-bold leading-relaxed">
-            Keep your family&rsquo;s treasured stories. Record grandparents,
-            siblings, aunts &amp; uncles. Index people, places, and themes
-            across generations.
+          <div className="text-sm font-bold leading-relaxed italic">
+            Coming soon.
           </div>
-        </Link>
+        </div>
       </div>
 
       <div className="annotation">v.0.1 (prototype)</div>
