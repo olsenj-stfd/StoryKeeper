@@ -57,11 +57,13 @@ export function ModeProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  return (
-    <ModeContext.Provider value={mode}>
-      <div data-mode={mode} className="contents">
-        {children}
-      </div>
-    </ModeContext.Provider>
-  );
+  // Attach data-mode to documentElement so the body itself (and everything
+  // inside) can be themed. The wrapper-div approach doesn't let us style
+  // the body background, which Family mode needs (black canvas effect).
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    document.documentElement.setAttribute('data-mode', mode);
+  }, [mode]);
+
+  return <ModeContext.Provider value={mode}>{children}</ModeContext.Provider>;
 }

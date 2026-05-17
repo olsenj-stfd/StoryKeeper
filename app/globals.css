@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Comic+Neue:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Comic+Neue:wght@400;700&family=Inter:wght@400;500&family=Playfair+Display:ital,wght@0,400;0,500;1,400&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -74,66 +74,166 @@ body {
   border-width: 3.5px !important;
 }
 
-/* --- Family mode: calmer, archival aesthetic --------------------- *
- * Placeholder until the real theme is uploaded. Strips most of the
- * comic-book treatments: serif body, clean borders, no marker fills,
- * no halftone, warm cream paper. Easy to swap. */
+/* --- Family mode: Family Library aesthetic ---------------------- *
+ * Black canvas with a centered cream column. Playfair Display serif
+ * for titles (with italics for accent), Inter sans for body. Rounded
+ * surface cards in cream / pale blue / peach / coral / sage. Strips
+ * all comic-book treatments. */
 
-[data-mode='family'] body,
-[data-mode='family'] .font-comic {
-  font-family: 'Iowan Old Style', 'Georgia', 'Cambria', serif;
+[data-mode='family'] {
+  --fam-canvas: #000000;
+  --fam-cream: #F6F4EE;
+  --fam-blue: #CDD5E2;
+  --fam-peach: #F6BBA6;
+  --fam-coral: #F17A54;
+  --fam-green: #B5D295;
+  --fam-ink: #1D1D1B;
+  --fam-muted: rgba(29, 29, 27, 0.6);
+  --fam-coral-dark: #A53D1C;
 }
 
+[data-mode='family'] body {
+  background-color: var(--fam-canvas);
+  color: var(--fam-ink);
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* Center the whole app in a 430px column on the black canvas, like
+ * a phone frame on desktop. On mobile, full width. */
+[data-mode='family'] body > * {
+  max-width: 430px;
+  margin-left: auto;
+  margin-right: auto;
+  background-color: var(--fam-cream);
+}
+
+[data-mode='family'] nav.sticky {
+  background-color: rgba(246, 244, 238, 0.95);
+  border-bottom: 0.5px solid var(--fam-ink);
+}
+
+/* Typography */
+[data-mode='family'] .font-display,
+[data-mode='family'] .font-comic,
+[data-mode='family'] h1,
+[data-mode='family'] h2,
+[data-mode='family'] h3 {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+[data-mode='family'] .annotation {
+  font-family: 'Inter', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--fam-muted);
+}
+[data-mode='family'] .annotation.ink {
+  color: var(--fam-ink);
+}
+
+/* Marker highlight becomes an italic Playfair accent */
+[data-mode='family'] .marker-highlight {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+}
+[data-mode='family'] .marker-highlight::after {
+  display: none;
+}
+
+/* Paper/halftone backgrounds: kill the dot grid in family mode */
 [data-mode='family'] .paper-grid,
-[data-mode='family'] .halftone-soft {
-  background-color: #fbf2e2;
-  background-image: none;
-}
+[data-mode='family'] .halftone-soft,
 [data-mode='family'] .paper-grid.halftone-soft {
+  background-color: var(--fam-cream);
   background-image: none;
   background-size: auto;
 }
 
+/* Sketched boxes become clean rounded surface cards. Marker fills are
+ * dropped; the marker- color picks the surface color instead. */
 [data-mode='family'] .sketched-box {
-  border: 1.5px solid rgba(43, 36, 23, 0.55);
-  border-radius: 8px;
-  background: #ffffff;
+  border: 0.5px solid var(--fam-ink);
+  border-radius: 32px;
+  background: var(--fam-cream);
+  padding: 24px !important;
 }
 [data-mode='family'] .sketched-box::before {
   display: none;
 }
+[data-mode='family'] .sketched-box.marker-kid { background: var(--fam-peach); }
+[data-mode='family'] .sketched-box.marker-parent { background: var(--fam-blue); }
+[data-mode='family'] .sketched-box.marker-mint { background: var(--fam-green); }
+[data-mode='family'] .sketched-box.marker-coral { background: var(--fam-coral); color: var(--fam-cream); }
 
+/* Sketched buttons -> flat pill buttons */
 [data-mode='family'] .sketched-btn {
-  border: 1.5px solid rgba(43, 36, 23, 0.55);
-  border-radius: 6px;
-  background: #ffffff;
-  font-family: 'Iowan Old Style', serif;
-  letter-spacing: normal;
+  border: 0.5px solid var(--fam-ink);
+  border-radius: 24px;
+  background: var(--fam-cream);
+  padding: 10px 20px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
 [data-mode='family'] .sketched-btn::before {
   display: none;
 }
-
-[data-mode='family'] .marker-highlight::after {
-  display: none;
-}
-[data-mode='family'] .marker-highlight {
-  font-family: inherit;
-  font-weight: 600;
-  border-bottom: 2px solid var(--color-parent);
-  padding-bottom: 1px;
+[data-mode='family'] .sketched-btn.marker-kid { background: var(--fam-peach); }
+[data-mode='family'] .sketched-btn.marker-mint { background: var(--fam-green); }
+[data-mode='family'] .sketched-btn.marker-coral {
+  background: var(--fam-coral);
+  color: var(--fam-cream);
+  border-color: var(--fam-coral);
 }
 
-[data-mode='family'] .annotation {
-  font-family: 'Iowan Old Style', serif;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  font-size: 0.68rem;
+/* Status badge — used inline anywhere we want a thin-bordered chip */
+[data-mode='family'] .status-badge {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.7rem;
+  padding: 4px 10px;
+  border: 0.5px solid var(--fam-ink);
+  border-radius: 20px;
+  display: inline-block;
 }
 
+/* Dashed image area -> rounded soft area */
 [data-mode='family'] .panel-img-dashed {
-  border-radius: 8px;
-  border: 1.5px dashed rgba(43, 36, 23, 0.5);
+  border-radius: 24px;
+  border: 0.5px dashed var(--fam-ink);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* Bubble (parent + kid) overrides for the story view */
+[data-mode='family'] .bg-parent-soft {
+  background-color: var(--fam-blue) !important;
+}
+[data-mode='family'] .bg-kid-soft {
+  background-color: var(--fam-peach) !important;
+}
+[data-mode='family'] .border-parent,
+[data-mode='family'] .border-l-parent {
+  border-color: var(--fam-ink) !important;
+}
+[data-mode='family'] .border-kid,
+[data-mode='family'] .border-r-kid {
+  border-color: var(--fam-ink) !important;
+}
+[data-mode='family'] .bg-parent {
+  background-color: var(--fam-coral) !important;
+  color: var(--fam-cream) !important;
+}
+
+/* "Blob" clip-path utility for category-pill style images. Apply with
+ * className="blob" on a div with a background. */
+[data-mode='family'] .blob {
+  clip-path: polygon(10% 0%, 90% 5%, 100% 40%, 85% 90%, 50% 100%, 15% 85%, 0% 50%);
 }
 
 /* Hand-drawn wavy underline accent. */
