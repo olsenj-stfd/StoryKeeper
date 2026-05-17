@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 export default function Home() {
   return (
-    <div className="flex flex-1 flex-col items-center px-6 py-10 paper-grid gap-8">
+    <div className="flex flex-1 flex-col items-center px-6 py-10 paper-grid halftone-soft gap-8">
       <div className="text-center max-w-md">
         <div className="font-display text-5xl leading-tight relative inline-block">
           <span className="marker-highlight">STORY</span>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import { SketchScribble } from './SketchScribble';
 
 type SpeechRecognitionLike = {
   continuous: boolean;
@@ -60,6 +61,7 @@ export function RecordButton({
   const [busy, setBusy] = useState(false);
   const [hint, setHint] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [activeStream, setActiveStream] = useState<MediaStream | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
@@ -69,6 +71,7 @@ export function RecordButton({
     setError(null);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      setActiveStream(stream);
       const mimeType = pickAudioMimeType();
       const rec = mimeType
         ? new MediaRecorder(stream, { mimeType })
@@ -83,6 +86,7 @@ export function RecordButton({
         const err = (e as unknown as { error?: { message?: string } }).error;
         setError('Recorder error: ' + (err?.message ?? 'unknown'));
         stream.getTracks().forEach((t) => t.stop());
+        setActiveStream(null);
         setRecording(false);
       };
       rec.onstop = async () => {
@@ -92,6 +96,7 @@ export function RecordButton({
         const blobType = rec.mimeType || mimeType || 'audio/webm';
         const blob = new Blob(chunksRef.current, { type: blobType });
         stream.getTracks().forEach((t) => t.stop());
+        setActiveStream(null);
         try {
           await onRecorded(blob, transcriptRef.current.trim());
         } catch (err) {
@@ -155,27 +160,39 @@ export function RecordButton({
   };
 
   return (
-    <div className="flex flex-col items-end gap-1 max-w-full">
-      <button
-        onClick={recording ? stop : start}
-        disabled={busy}
-        type="button"
-        className={`rounded-full px-5 py-2.5 text-white text-[15px] ${
-          recording ? 'bg-[#c64a4a] recording-anim' : 'bg-parent hover:brightness-95'
-        } disabled:opacity-60`}
-      >
-        {busy ? 'Saving…' : recording ? '■ Stop' : '● Record'}
-      </button>
-      {hint && (
-        <div className="text-[11px] text-muted text-right max-w-[260px] leading-tight">
-          {hint}
+    <div className="flex flex-col items-stretch gap-2 w-full max-w-md">
+      {recording && activeStream && (
+        <div className="relative">
+          <div className="annotation absolute -top-3 left-2 bg-white px-1">
+            SKETCHING AS YOU TALK
+          </div>
+          <SketchScribble stream={activeStream} />
         </div>
       )}
-      {error && (
-        <div className="text-[12px] text-[#c64a4a] text-right max-w-[260px] leading-tight font-bold">
-          {error}
+      <div className="flex items-start justify-end gap-2 flex-wrap">
+        <div className="flex flex-col items-end gap-1">
+          <button
+            onClick={recording ? stop : start}
+            disabled={busy}
+            type="button"
+            className={`rounded-full px-5 py-2.5 text-white text-[15px] ${
+              recording ? 'bg-[#c64a4a] recording-anim' : 'bg-parent hover:brightness-95'
+            } disabled:opacity-60`}
+          >
+            {busy ? 'Saving…' : recording ? '■ Stop' : '● Record'}
+          </button>
+          {hint && (
+            <div className="text-[11px] text-muted text-right max-w-[260px] leading-tight">
+              {hint}
+            </div>
+          )}
+          {error && (
+            <div className="text-[12px] text-[#c64a4a] text-right max-w-[260px] leading-tight font-bold">
+              {error}
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

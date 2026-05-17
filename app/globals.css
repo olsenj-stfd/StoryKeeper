@@ -43,8 +43,56 @@ body {
   background-size: 22px 22px;
 }
 
+/* Halftone shading — classic comic-book newsprint dot texture. */
+.halftone {
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    rgba(43, 36, 23, 0.18) 1px,
+    transparent 1.4px
+  );
+  background-size: 5px 5px;
+}
+.halftone-soft {
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    rgba(43, 36, 23, 0.08) 1px,
+    transparent 1.4px
+  );
+  background-size: 7px 7px;
+}
+/* Combine with paper-grid by stacking — halftone-soft as a second layer. */
+.paper-grid.halftone-soft {
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(43, 36, 23, 0.08) 1px, transparent 1.4px),
+    radial-gradient(rgba(43, 36, 23, 0.13) 1px, transparent 1px);
+  background-size: 7px 7px, 22px 22px;
+}
+
+/* Heavier deliberate ink. Pair with sketched-box when a panel should
+ * feel especially drawn. */
+.ink-thick {
+  border-width: 3.5px !important;
+}
+
+/* Hand-drawn wavy underline accent. */
+.scribble-underline {
+  position: relative;
+  display: inline-block;
+}
+.scribble-underline::after {
+  content: '';
+  position: absolute;
+  left: -4%;
+  right: -4%;
+  bottom: -4px;
+  height: 6px;
+  border-bottom: 2.5px solid var(--color-ink);
+  border-radius: 50%;
+  transform: rotate(-1deg);
+}
+
 .sketched-box {
-  border: 2px solid var(--color-ink);
+  border: 2.5px solid var(--color-ink);
   border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
   position: relative;
   background: #ffffff;
