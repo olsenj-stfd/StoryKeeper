@@ -2,74 +2,38 @@ import Link from 'next/link';
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 paper-grid px-5 py-6">
-      <header className="flex justify-between items-start mb-6 max-w-md w-full mx-auto">
-        <div>
-          <div className="font-display text-2xl leading-none relative inline-block">
-            <span className="marker-highlight">STORY</span>
-            <br />
-            KEEPER
-          </div>
-          <div className="annotation mt-2">v.0.1 (prototype)</div>
+    <div className="flex flex-1 flex-col items-center justify-center px-6 py-12 paper-grid gap-8">
+      <div className="text-center max-w-md">
+        <div className="font-display text-5xl leading-tight relative inline-block">
+          <span className="marker-highlight">STORY</span>
+          <br />
+          KEEPER
         </div>
-      </header>
-
-      <div className="flex justify-between items-baseline mb-8 px-1 max-w-md w-full mx-auto">
-        <div className="annotation">FILE: STORYKEEPER_001</div>
-        <div className="annotation ink">AUTHOR: YOU</div>
+        <div className="annotation mt-4">stories from your parent, kept and continued</div>
       </div>
 
-      <div className="flex flex-col gap-12 max-w-md mx-auto w-full">
-        <Link
-          href="/kid"
-          className="sketched-box marker-kid block px-4 py-5 relative self-start w-[92%]"
-        >
-          <div className="annotation absolute -top-4 left-5">FIG 1. THE LISTENER</div>
-          <div className="panel-img-dashed h-32 mb-3">
-            <svg viewBox="0 0 100 100" className="sketch-svg">
-              <path d="M 15 60 Q 15 25, 50 25 Q 85 25, 85 60" />
-              <rect x="8" y="55" width="16" height="26" rx="5" />
-              <rect x="76" y="55" width="16" height="26" rx="5" />
-              <path d="M 60 35 L 60 55 M 60 35 L 78 32 L 78 50" />
-              <circle cx="58" cy="56" r="3.5" />
-              <circle cx="76" cy="51" r="3.5" />
-            </svg>
-          </div>
-          <div className="font-display text-xl">
-            I&rsquo;M THE <span className="marker-highlight kid">KID</span>
-          </div>
-          <div className="text-sm font-bold mt-1">
-            Hear your story. Pick what happens next.
-          </div>
-          <div className="annotation ink absolute -bottom-5 right-3">
-            TAP ME! &rarr;
-          </div>
-        </Link>
+      <svg viewBox="0 0 200 90" className="sketch-svg w-48 h-24 mx-auto" aria-hidden="true">
+        {/* open book sketch */}
+        <path d="M 20 70 L 100 35 L 180 70 L 180 80 L 100 45 L 20 80 Z" />
+        <path d="M 100 35 L 100 80" />
+        <path d="M 30 60 L 60 50 M 30 67 L 60 57 M 30 74 L 60 64" strokeWidth="1.5" />
+        <path d="M 140 50 L 170 60 M 140 57 L 170 67 M 140 64 L 170 74" strokeWidth="1.5" />
+        {/* sparkles above */}
+        <path d="M 100 18 L 100 28 M 95 23 L 105 23" strokeWidth="2" />
+        <path d="M 70 12 L 70 18 M 67 15 L 73 15" strokeWidth="1.5" />
+        <path d="M 130 14 L 130 20 M 127 17 L 133 17" strokeWidth="1.5" />
+      </svg>
 
-        <Link
-          href="/parent"
-          className="sketched-box marker-parent block px-4 py-5 relative self-end w-[92%]"
-        >
-          <div className="annotation absolute -top-4 left-5">FIG 2. THE STORYTELLER</div>
-          <div className="panel-img-dashed h-32 mb-3">
-            <svg viewBox="0 0 100 100" className="sketch-svg">
-              <rect x="40" y="18" width="20" height="38" rx="10" ry="10" />
-              <path d="M 28 50 Q 28 70, 50 70 Q 72 70, 72 50" />
-              <line x1="50" y1="70" x2="50" y2="86" />
-              <line x1="35" y1="88" x2="65" y2="88" />
-              <line x1="45" y1="30" x2="55" y2="30" />
-              <line x1="45" y1="38" x2="55" y2="38" />
-              <line x1="45" y1="46" x2="55" y2="46" />
-            </svg>
-          </div>
-          <div className="font-display text-xl">
-            I&rsquo;M THE <span className="marker-highlight">PARENT</span>
-          </div>
-          <div className="text-sm font-bold mt-1">
-            Record the next part of the story.
-          </div>
-        </Link>
-      </div>
+      <p className="font-bold text-center max-w-md leading-relaxed">
+        Record stories for your kid even when you&rsquo;re away. They can listen back,
+        pick what happens next, and one day print the whole adventure as a book.
+      </p>
+
+      <Link href="/start" className="sketched-btn marker-kid text-xl px-8 py-3">
+        BEGIN &rarr;
+      </Link>
+
+      <div className="annotation">v.0.1 (prototype)</div>
     </div>
   );
 }

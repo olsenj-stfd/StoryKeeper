@@ -39,6 +39,9 @@ export default function KidStoryPage({
   const [playingIndex, setPlayingIndex] = useState<number | null>(null);
   const playAllAudioRef = useRef<HTMLAudioElement | null>(null);
   const playAllCancelledRef = useRef(false);
+  const [mode, setMode] = useState<'mom' | 'surprise'>('mom');
+  const [surpriseOptions, setSurpriseOptions] = useState<string[]>([]);
+  const [loadingSurprise, setLoadingSurprise] = useState(false);
 
   const refresh = useCallback(async () => {
     const s = await data.getStory(storyId);
@@ -105,22 +108,45 @@ export default function KidStoryPage({
     void indexStoryNow(storyId);
   };
 
-  // Always surface at least TARGET_OPTION_COUNT options. Start with the parent-recorded
-  // branches, then fill the rest from the curated fallback pool.
+  // "From Mom" mode: only show what the parent actually recorded as branches.
+  // "Surprise me" mode: ask Claude for story-aware continuations that reference
+  // the existing characters/settings. Fallback to the curated pool if no key.
   const recordedOptions = parentRecordedBranches.map((n) => ({
     id: n.id,
     label: n.branchLabel ?? '',
     icon: n.branchIcon,
   }));
-  const fillCount = Math.max(
-    0,
-    TARGET_OPTION_COUNT - recordedOptions.length,
-  );
-  const fallbackOptions = fallbackChoices.slice(0, fillCount).map((t) => ({
-    id: t,
-    label: t,
-  }));
-  const allOptions = [...recordedOptions, ...fallbackOptions];
+
+  const fetchSurpriseOptions = useCallback(async () => {
+    setLoadingSurprise(true);
+    try {
+      const transcript = nodes
+        .filter((n) => n.text)
+        .map((n) => `${n.who}: ${n.text}`)
+        .join('\n');
+      const r = await fetch('/api/ai/continuations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          transcript,
+          characters: bible?.characters ?? [],
+          settings: bible?.settings ?? [],
+        }),
+      });
+      const j = (await r.json()) as { options: string[] };
+      setSurpriseOptions(j.options ?? []);
+    } finally {
+      setLoadingSurprise(false);
+    }
+  }, [nodes, bible]);
+
+  // Fetch surprise options when switching into surprise mode or after the
+  // path advances (so the kid gets fresh story-aware options each turn).
+  useEffect(() => {
+    if (mode === 'surprise') {
+      void fetchSurpriseOptions();
+    }
+  }, [mode, currentId, fetchSurpriseOptions]);
 
   const onPickOption = (id: string) => {
     if (parentRecordedBranches.some((n) => n.id === id)) {
@@ -129,6 +155,8 @@ export default function KidStoryPage({
       void pickFallback(id);
     }
   };
+
+  const surpriseAsOptions = surpriseOptions.map((t) => ({ id: t, label: t }));
 
   const stopPlayAll = useCallback(() => {
     playAllCancelledRef.current = true;
@@ -270,10 +298,58 @@ export default function KidStoryPage({
 
       <footer className="border-t-2 border-dashed border-ink/30 px-5 py-5 bg-white">
         <div className="max-w-3xl mx-auto">
-          <div className="annotation ink mb-3">
-            YOUR TURN &mdash; WHAT HAPPENS NEXT?
+          <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
+            <div className="annotation ink">
+              YOUR TURN &mdash; WHAT HAPPENS NEXT?
+            </div>
+            <div className="flex gap-1 bg-cream-soft rounded-full p-1 text-xs border border-ink/30">
+              <button
+                onClick={() => setMode('mom')}
+                type="button"
+                className={`px-3 py-1 rounded-full font-display tracking-wide ${
+                  mode === 'mom' ? 'bg-white text-ink' : 'text-muted'
+                }`}
+              >
+                FROM MOM
+              </button>
+              <button
+                onClick={() => setMode('surprise')}
+                type="button"
+                className={`px-3 py-1 rounded-full font-display tracking-wide ${
+                  mode === 'surprise' ? 'bg-white text-ink' : 'text-muted'
+                }`}
+              >
+                SURPRISE ME
+              </button>
+            </div>
           </div>
-          <BranchPicker options={allOptions} onPick={onPickOption} />
+
+          {mode === 'mom' ? (
+            recordedOptions.length > 0 ? (
+              <BranchPicker options={recordedOptions} onPick={onPickOption} />
+            ) : (
+              <div className="sketched-box marker-mint p-4">
+                <div className="font-bold text-sm">
+                  No new parts yet from Mom!
+                </div>
+                <div className="text-sm mt-1">
+                  Tap <span className="font-display">SURPRISE ME</span> above to
+                  invent what happens next, using the people and places already
+                  in your story.
+                </div>
+              </div>
+            )
+          ) : loadingSurprise && surpriseAsOptions.length === 0 ? (
+            <div className="annotation">Thinking up some ideas&hellip;</div>
+          ) : (
+            <>
+              <BranchPicker options={surpriseAsOptions} onPick={onPickOption} />
+              {loadingSurprise && (
+                <div className="annotation mt-2">Cooking up fresh ideas&hellip;</div>
+              )}
+            </>
+          )}
+
           <button
             onClick={reset}
             className="mt-4 text-xs text-muted hover:text-ink underline font-display"
