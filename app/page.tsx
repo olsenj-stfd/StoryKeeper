@@ -36,12 +36,8 @@ export default function Home() {
           className="sketched-box marker-kid block px-5 py-5 relative self-start w-[94%]"
         >
           <div className="annotation absolute -top-4 left-5">MODE 1.</div>
-          <div className="font-display text-2xl mb-1">
+          <div className="font-display text-2xl">
             <span className="marker-highlight kid">BEDTIME</span>
-          </div>
-          <div className="text-sm font-bold leading-relaxed">
-            For kids. Mom or Dad records a bedtime story; the kid picks what
-            happens next, hears it back, and the story grows over time.
           </div>
           <div className="annotation ink absolute -bottom-5 right-3">TAP ME! &rarr;</div>
         </Link>

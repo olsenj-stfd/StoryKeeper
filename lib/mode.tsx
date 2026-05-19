@@ -27,10 +27,10 @@ export function useModeLabels() {
     } as const;
   }
   return {
-    storyteller: 'Parent',
-    storytellerUpper: 'PARENT',
-    listener: 'Kid',
-    listenerUpper: 'KID',
+    storyteller: 'Storyteller',
+    storytellerUpper: 'STORYTELLER',
+    listener: 'Listener',
+    listenerUpper: 'LISTENER',
     brand: 'Moonjar Stories',
     libraryLabel: 'Your stories',
     tellerHint: 'Record the next part of the story',

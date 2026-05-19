@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 const STUB = {
   synopsis: 'A small kid finds a tiny purple door behind the ivy and decides to step through.',
   characters: [
-    { name: 'The Kid', role: 'protagonist', traits: ['curious', 'gentle'] },
+    { name: 'The Listener', role: 'protagonist', traits: ['curious', 'gentle'] },
     { name: 'Mom', role: 'narrator', traits: ['warm', 'thoughtful'] },
   ],
   themes: ['curiosity', 'home', 'comfort'],
