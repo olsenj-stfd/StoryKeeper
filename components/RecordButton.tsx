@@ -97,8 +97,42 @@ export function RecordButton({
         const blob = new Blob(chunksRef.current, { type: blobType });
         stream.getTracks().forEach((t) => t.stop());
         setActiveStream(null);
+
+        let transcript = transcriptRef.current.trim();
+
+        // Whisper fallback: if Web Speech captured nothing (iOS Safari/Chrome,
+        // Firefox without prefs), POST the blob to /api/ai/transcribe. Server
+        // forwards to OpenAI Whisper and returns the text. Without OPENAI_API_KEY
+        // (or with no billing on OpenAI), this no-ops and we proceed with
+        // whatever transcript we have.
+        if (!transcript && blob.size > 0) {
+          setHint('Transcribing audio…');
+          try {
+            const ext = blobType.split('/')[1]?.split(';')[0] || 'webm';
+            const form = new FormData();
+            form.append('audio', blob, `recording.${ext}`);
+            const r = await fetch('/api/ai/transcribe', {
+              method: 'POST',
+              body: form,
+            });
+            const j = (await r.json()) as { transcript?: string; source?: string };
+            if (j.transcript && j.transcript.trim()) {
+              transcript = j.transcript.trim();
+              setHint(null);
+            } else if (j.source === 'no-key') {
+              setHint('No transcription — add OPENAI_API_KEY to enable.');
+            } else if (j.source === 'whisper-error') {
+              setHint('Transcription failed — OpenAI billing may be unset.');
+            } else {
+              setHint(null);
+            }
+          } catch {
+            setHint('Transcription failed — proceeding without.');
+          }
+        }
+
         try {
-          await onRecorded(blob, transcriptRef.current.trim());
+          await onRecorded(blob, transcript);
         } catch (err) {
           setError('Save failed: ' + (err as Error).message);
         }
@@ -132,7 +166,9 @@ export function RecordButton({
         }
         recognitionRef.current = recognition;
       } else {
-        setHint('No live transcription on this device — type a summary above so the AI can index.');
+        // Web Speech blocked (iOS / etc.) — we'll fall back to server-side
+        // Whisper after the recording stops, so don't scare the user yet.
+        setHint(null);
       }
 
       rec.start();
