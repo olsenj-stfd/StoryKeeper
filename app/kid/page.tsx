@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { data } from '@/lib/data';
 import type { Story, StoryBible, World } from '@/lib/types';
 import { CharacterPills } from '@/components/CharacterPills';
+import { RecentActivity } from '@/components/RecentActivity';
 import { useModeLabels } from '@/lib/mode';
 
 const HUE_MARKER: Record<string, string> = {
@@ -64,6 +65,7 @@ export default function KidLibrary() {
       </header>
 
       <div className="max-w-md w-full mx-auto flex flex-col gap-10">
+        <RecentActivity audience="kid" />
         {worlds.length === 0 && (
           <div className="annotation">No stories yet.</div>
         )}
