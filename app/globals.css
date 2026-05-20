@@ -2,33 +2,41 @@
 @import "tailwindcss";
 
 @theme {
-  /* --- Pop Up Tales palette --- */
-  --color-paper: #FAF5EE;
-  --color-grid: #F0D6C3;
-  --color-ink: #4A3C31;
-  --color-orange: #FF7B00;
-  --color-blue: #3E92CC;
-  --color-yellow: #FFC928;
-  --color-green: #4CAF50;
-  --color-pink: #FFA4B6;
+  /* --- Pink / Yellow / Teal palette --- */
+  --color-paper: #FFF6F0;       /* warm cream, very slightly pink-tinted */
+  --color-grid: #F5D8DD;        /* pale pink grid lines */
+  --color-ink: #3A2F34;         /* warm dark brown-aubergine */
+  --color-pink: #FF8FAB;        /* primary pink */
+  --color-pink-deep: #FF5C84;   /* deeper pink for accents */
+  --color-yellow: #FFC928;      /* primary yellow */
+  --color-teal: #4FBDBA;        /* primary teal */
+  --color-teal-deep: #2E8F8C;   /* deeper teal */
+  --color-mint: #A8DDDB;        /* pale teal/mint */
   --color-white: #FFFFFF;
 
-  /* Legacy color aliases — kept so existing JSX (bg-cream, border-line,
-   * text-muted, marker-* surfaces, etc.) still resolves cleanly. */
-  --color-cream: #FAF5EE;
-  --color-cream-soft: #FFF8EE;
-  --color-cream-deep: #F0D6C3;
-  --color-muted: #8A7D6B;
-  --color-line: #F0D6C3;
-  --color-parent: #3E92CC;
-  --color-parent-soft: #DDEAF4;
-  --color-kid: #FFC928;
+  /* Legacy aliases mapped to the new palette so existing JSX (marker-*,
+   * border-line, bg-cream, etc.) still resolves cleanly without touching
+   * every component. */
+  --color-cream: #FFF6F0;
+  --color-cream-soft: #FFF8F3;
+  --color-cream-deep: #F5D8DD;
+  --color-muted: #8B7C82;
+  --color-line: #F5D8DD;
+  --color-parent: #4FBDBA;          /* was blue → teal */
+  --color-parent-soft: #DBF0EF;
+  --color-kid: #FFC928;             /* yellow */
   --color-kid-soft: #FFEFB3;
-  --color-marker-parent: #3E92CC;
-  --color-marker-kid: #FFC928;
-  --color-marker-mint: #4CAF50;
-  --color-marker-coral: #FF7B00;
-  --color-marker-loud: #FFA4B6;
+  --color-marker-parent: #4FBDBA;   /* teal */
+  --color-marker-kid: #FFC928;      /* yellow */
+  --color-marker-mint: #A8DDDB;     /* pale teal */
+  --color-marker-coral: #FF8FAB;    /* pink (was orange) */
+  --color-marker-loud: #FF5C84;     /* deeper pink */
+
+  /* Keep the old base names mapped sensibly so any direct references
+   * (bg-orange, bg-blue, bg-green) still pick a sensible color. */
+  --color-orange: #FF8FAB;
+  --color-blue: #4FBDBA;
+  --color-green: #A8DDDB;
 
   /* Fonts */
   --font-display: 'Fredoka', system-ui, sans-serif;
