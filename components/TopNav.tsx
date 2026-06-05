@@ -2,10 +2,12 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '@/lib/auth';
 
 export function TopNav() {
   const pathname = usePathname();
   const isHome = pathname === '/';
+  const { user, signOut } = useAuth();
 
   const linkClass = (active: boolean) =>
     `annotation ink px-2 py-1 rounded-full transition ${
@@ -21,7 +23,7 @@ export function TopNav() {
       >
         MOONJAR STORIES
       </Link>
-      <div className="flex gap-1 items-center">
+      <div className="flex gap-1 items-center flex-wrap">
         <Link
           href="/"
           className={linkClass(isHome)}
@@ -30,25 +32,36 @@ export function TopNav() {
           <span aria-hidden="true">🏠 </span>HOME
         </Link>
         {!isHome && (
-          <Link
-            href="/start"
-            className={linkClass(pathname === '/start')}
-          >
+          <Link href="/start" className={linkClass(pathname === '/start')}>
             SWITCH
           </Link>
         )}
         <Link
-          href="/about"
-          className={linkClass(pathname === '/about')}
+          href="/collaborators"
+          className={linkClass(pathname === '/collaborators')}
         >
+          FAMILY
+        </Link>
+        <Link href="/about" className={linkClass(pathname === '/about')}>
           ABOUT
         </Link>
-        <Link
-          href="/order"
-          className={linkClass(pathname === '/order')}
-        >
+        <Link href="/order" className={linkClass(pathname === '/order')}>
           ORDER
         </Link>
+        {user ? (
+          <button
+            type="button"
+            onClick={() => void signOut()}
+            className={linkClass(false)}
+            title={user.email ?? undefined}
+          >
+            SIGN OUT
+          </button>
+        ) : (
+          <Link href="/signin" className={linkClass(pathname === '/signin')}>
+            SIGN IN
+          </Link>
+        )}
       </div>
     </nav>
   );
