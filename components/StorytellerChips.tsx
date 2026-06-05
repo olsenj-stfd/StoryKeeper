@@ -52,29 +52,49 @@ export function StorytellerChips({
     }
   };
 
+  // Stable, distinct color per chip so they read at rest, not just on tap.
+  // Picks from the new palette by index across the deduped list.
+  const CHIP_COLORS = [
+    { bg: '#FFC928', fg: '#3A2F34' }, // yellow
+    { bg: '#FF8FAB', fg: '#FFFFFF' }, // pink
+    { bg: '#4FBDBA', fg: '#FFFFFF' }, // teal
+    { bg: '#A8DDDB', fg: '#3A2F34' }, // mint
+    { bg: '#FF5C84', fg: '#FFFFFF' }, // deeper pink
+    { bg: '#FFEFB3', fg: '#3A2F34' }, // pale yellow
+  ];
+
   return (
     <div>
       <div className="annotation mb-2">WHO&rsquo;S TELLING?</div>
       <div className="flex flex-wrap gap-2 items-center">
-        {all.map((name) => (
-          <button
-            key={name}
-            onClick={() => pick(name)}
-            type="button"
-            className={`px-3 py-1 rounded-full border-2 text-sm transition ${
-              value === name
-                ? 'bg-parent text-white border-parent'
-                : 'bg-white border-ink/40 hover:border-ink'
-            }`}
-          >
-            {name}
-          </button>
-        ))}
+        {all.map((name, i) => {
+          const c = CHIP_COLORS[i % CHIP_COLORS.length];
+          const selected = value === name;
+          return (
+            <button
+              key={name}
+              onClick={() => pick(name)}
+              type="button"
+              style={{
+                backgroundColor: c.bg,
+                color: c.fg,
+                borderColor: '#3A2F34',
+                boxShadow: selected
+                  ? '0 0 0 3px #FFC928, 2px 4px 0 #3A2F34'
+                  : '2px 2px 0 #3A2F34',
+                transform: selected ? 'translate(-1px, -1px)' : undefined,
+              }}
+              className="px-3 py-1 rounded-full border-2 text-sm font-bold transition"
+            >
+              {name}
+            </button>
+          );
+        })}
         {!adding ? (
           <button
             onClick={() => setAdding(true)}
             type="button"
-            className="px-3 py-1 rounded-full border-2 border-dashed border-ink/40 text-sm text-muted hover:text-ink hover:border-ink"
+            className="px-3 py-1 rounded-full border-2 border-dashed border-ink/60 text-sm font-bold text-ink/70 bg-white hover:text-ink hover:border-ink"
           >
             + Add
           </button>
@@ -95,7 +115,7 @@ export function StorytellerChips({
                 }
               }}
               placeholder="Name"
-              className="rounded-full border-2 border-ink/60 bg-white px-3 py-1 text-sm w-28"
+              className="rounded-full border-2 border-ink bg-white px-3 py-1 text-sm w-28"
             />
           </div>
         )}
