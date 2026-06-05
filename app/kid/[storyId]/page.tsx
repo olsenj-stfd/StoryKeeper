@@ -9,6 +9,7 @@ import { BranchPicker } from '@/components/BranchPicker';
 import { CharacterPills, ThemePills } from '@/components/CharacterPills';
 import { pickBranches } from '@/lib/branches';
 import { indexStoryNow } from '@/lib/indexing';
+import { AuthGate } from '@/components/AuthGate';
 
 const TARGET_OPTION_COUNT = 4;
 
@@ -25,7 +26,19 @@ function reconstructPath(nodes: StoryNode[], currentId: string): string[] {
   return path;
 }
 
-export default function KidStoryPage({
+export default function KidStoryPageRoute({
+  params,
+}: {
+  params: Promise<{ storyId: string }>;
+}) {
+  return (
+    <AuthGate>
+      <KidStoryPage params={params} />
+    </AuthGate>
+  );
+}
+
+function KidStoryPage({
   params,
 }: {
   params: Promise<{ storyId: string }>;

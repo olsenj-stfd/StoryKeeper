@@ -29,6 +29,15 @@ export type DataAdapter = {
     nodeId: string,
     patch: Partial<Pick<StoryNode, 'branchLabel' | 'text' | 'branchIcon'>>,
   ): Promise<void>;
+  // Replace an AI-voiced kid_text beat with an actual parent recording.
+  // Same node keeps its position in the story; gains real audio + the
+  // storyteller's name, and optionally a richer text version.
+  fulfillKidRequest(
+    nodeId: string,
+    audioBlob: Blob,
+    who: string,
+    text?: string,
+  ): Promise<void>;
 
   // Session (kid's place in a story)
   getSession(storyId: string): Promise<Session | null>;

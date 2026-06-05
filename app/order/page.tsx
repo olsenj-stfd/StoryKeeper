@@ -3,10 +3,19 @@
 import { useCallback, useEffect, useState } from 'react';
 import { data } from '@/lib/data';
 import type { Story, World } from '@/lib/types';
+import { AuthGate } from '@/components/AuthGate';
 
 type BookStyle = 'illustrated' | 'blank';
 
-export default function OrderPage() {
+export default function OrderPageRoute() {
+  return (
+    <AuthGate>
+      <OrderPage />
+    </AuthGate>
+  );
+}
+
+function OrderPage() {
   const [worlds, setWorlds] = useState<World[]>([]);
   const [stories, setStories] = useState<Record<string, Story[]>>({});
   const [selected, setSelected] = useState<string | null>(null);

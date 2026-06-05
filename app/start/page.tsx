@@ -2,8 +2,17 @@
 
 import Link from 'next/link';
 import { useMode, useModeLabels } from '@/lib/mode';
+import { AuthGate } from '@/components/AuthGate';
 
-export default function StartPage() {
+export default function StartPageRoute() {
+  return (
+    <AuthGate>
+      <StartPage />
+    </AuthGate>
+  );
+}
+
+function StartPage() {
   const mode = useMode();
   const labels = useModeLabels();
   const isFamily = mode === 'family';

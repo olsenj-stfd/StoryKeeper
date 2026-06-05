@@ -10,13 +10,7 @@ import type {
   World,
 } from '../types';
 import type { DataAdapter } from './types';
-import {
-  DEFAULT_FAMILY_ID,
-  DEFAULT_STORY_ID,
-  SEED_NODES,
-  SEED_STORY,
-  SEED_WORLD,
-} from '../seed';
+import { DEFAULT_FAMILY_ID } from '../seed';
 
 const URL_ENV = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const KEY_ENV = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -158,62 +152,14 @@ function bibleFromRow(r: BibleRow): StoryBible {
 
 let seedPromise: Promise<void> | null = null;
 async function ensureSeed(c: SupabaseClient) {
+  // Only seed the family row so foreign keys still resolve for legacy
+  // operations. We intentionally no longer create the Garden world /
+  // story / nodes — new accounts start with an empty library.
   if (seedPromise) return seedPromise;
   seedPromise = (async () => {
-    // Family
     await c
       .from('families')
       .upsert({ id: DEFAULT_FAMILY_ID, name: 'Default family' });
-    // Seed world
-    const { data: existingWorld } = await c
-      .from('worlds')
-      .select('id')
-      .eq('id', SEED_WORLD.id)
-      .maybeSingle();
-    if (!existingWorld) {
-      await c.from('worlds').insert({
-        id: SEED_WORLD.id,
-        family_id: SEED_WORLD.familyId,
-        name: SEED_WORLD.name,
-        description: SEED_WORLD.description,
-        cover_hue: SEED_WORLD.coverHue,
-      });
-    }
-    // Seed story
-    const { data: existingStory } = await c
-      .from('stories')
-      .select('id')
-      .eq('id', SEED_STORY.id)
-      .maybeSingle();
-    if (!existingStory) {
-      await c.from('stories').insert({
-        id: SEED_STORY.id,
-        family_id: SEED_STORY.familyId,
-        world_id: SEED_STORY.worldId,
-        title: SEED_STORY.title,
-      });
-    }
-    // Seed nodes
-    const { data: existingNodes } = await c
-      .from('nodes')
-      .select('id')
-      .eq('story_id', DEFAULT_STORY_ID);
-    if (!existingNodes || existingNodes.length === 0) {
-      for (const n of SEED_NODES) {
-        await c.from('nodes').insert({
-          id: n.id,
-          story_id: n.storyId,
-          parent_node_id: n.parentNodeId,
-          type: n.type,
-          who: n.who,
-          text: n.text,
-          audio_url: n.audioUrl,
-          branch_label: n.branchLabel,
-          branch_icon: n.branchIcon,
-          order_index: n.orderIndex,
-        });
-      }
-    }
   })();
   return seedPromise;
 }
@@ -454,6 +400,40 @@ function makeAdapter(): DataAdapter {
       await c.from('nodes').update(update).eq('id', nodeId);
       const sid = (existing as { story_id?: string } | null)?.story_id;
       if (sid) notify(sid);
+    },
+
+    async fulfillKidRequest(nodeId, audioBlob, who, text) {
+      const c = db();
+      if (!c) return;
+      const { data: existing } = await c
+        .from('nodes')
+        .select('story_id')
+        .eq('id', nodeId)
+        .maybeSingle();
+      const storyId = (existing as { story_id?: string } | null)?.story_id;
+      if (!storyId) return;
+
+      const ext = (audioBlob.type.split('/')[1] ?? 'webm').split(';')[0];
+      const path = `${DEFAULT_FAMILY_ID}/${storyId}/${nodeId}.${ext}`;
+      let audioUrl: string | null = null;
+      const { error: upErr } = await c.storage
+        .from(BUCKET)
+        .upload(path, audioBlob, {
+          contentType: audioBlob.type,
+          upsert: true,
+        });
+      if (!upErr) {
+        const { data: urlData } = c.storage.from(BUCKET).getPublicUrl(path);
+        audioUrl = urlData.publicUrl;
+      }
+
+      const update: Record<string, unknown> = {
+        who,
+        audio_url: audioUrl,
+      };
+      if (text !== undefined && text.trim()) update.text = text;
+      await c.from('nodes').update(update).eq('id', nodeId);
+      notify(storyId);
     },
 
     async getSession(storyId) {

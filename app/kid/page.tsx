@@ -7,6 +7,7 @@ import type { Story, StoryBible, World } from '@/lib/types';
 import { CharacterPills } from '@/components/CharacterPills';
 import { RecentActivity } from '@/components/RecentActivity';
 import { ThemesThisWeek } from '@/components/ThemesThisWeek';
+import { AuthGate } from '@/components/AuthGate';
 import { useModeLabels } from '@/lib/mode';
 
 const HUE_MARKER: Record<string, string> = {
@@ -16,7 +17,15 @@ const HUE_MARKER: Record<string, string> = {
   coral: 'marker-coral',
 };
 
-export default function KidLibrary() {
+export default function KidLibraryRoute() {
+  return (
+    <AuthGate>
+      <KidLibrary />
+    </AuthGate>
+  );
+}
+
+function KidLibrary() {
   const labels = useModeLabels();
   const [worlds, setWorlds] = useState<World[]>([]);
   const [storiesByWorld, setStoriesByWorld] = useState<Record<string, Story[]>>({});

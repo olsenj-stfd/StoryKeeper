@@ -266,6 +266,22 @@ export const idbAdapter: DataAdapter = {
     notifyAll();
   },
 
+  async fulfillKidRequest(nodeId, audioBlob, who, text) {
+    const existing = await get<StoryNode>(STORES.nodes, nodeId);
+    if (!existing) return;
+    await put(STORES.audio, audioBlob, nodeId);
+    const url = urlFor(nodeId, audioBlob);
+    const updated: StoryNode = {
+      ...existing,
+      who,
+      audioUrl: url,
+      ...(text !== undefined && text.trim() ? { text } : {}),
+    };
+    await put(STORES.nodes, updated);
+    notify(existing.storyId);
+    notifyAll();
+  },
+
   async appendNode(input, audioBlob) {
     const id = newId('n');
     const node: StoryNode = {

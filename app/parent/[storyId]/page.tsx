@@ -9,8 +9,21 @@ import { RecordButton } from '@/components/RecordButton';
 import { StoryBiblePanel } from '@/components/StoryBiblePanel';
 import { indexStoryNow } from '@/lib/indexing';
 import { useModeLabels } from '@/lib/mode';
+import { AuthGate } from '@/components/AuthGate';
 
-export default function ParentStoryPage({
+export default function ParentStoryPageRoute({
+  params,
+}: {
+  params: Promise<{ storyId: string }>;
+}) {
+  return (
+    <AuthGate>
+      <ParentStoryPage params={params} />
+    </AuthGate>
+  );
+}
+
+function ParentStoryPage({
   params,
 }: {
   params: Promise<{ storyId: string }>;

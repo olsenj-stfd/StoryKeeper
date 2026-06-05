@@ -9,6 +9,8 @@ import { useModeLabels } from '@/lib/mode';
 import { RecordButton } from '@/components/RecordButton';
 import { StorytellerChips } from '@/components/StorytellerChips';
 import { RecentActivity } from '@/components/RecentActivity';
+import { ListenerRequests } from '@/components/ListenerRequests';
+import { AuthGate } from '@/components/AuthGate';
 import { indexStoryNow } from '@/lib/indexing';
 
 const HUE_MARKER: Record<string, string> = {
@@ -18,7 +20,15 @@ const HUE_MARKER: Record<string, string> = {
   coral: 'marker-coral',
 };
 
-export default function ParentLibrary() {
+export default function ParentLibraryRoute() {
+  return (
+    <AuthGate>
+      <ParentLibrary />
+    </AuthGate>
+  );
+}
+
+function ParentLibrary() {
   const router = useRouter();
   const labels = useModeLabels();
   const [worlds, setWorlds] = useState<World[]>([]);
@@ -57,6 +67,21 @@ export default function ParentLibrary() {
     const story = await data.createStory({ worldId, title: '' });
     router.push(`/parent/${story.id}`);
   };
+
+  async function autoTitleStory(storyId: string, transcript: string) {
+    try {
+      const r = await fetch('/api/ai/title', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transcript }),
+      });
+      const j = (await r.json()) as { title?: string };
+      const title = (j.title ?? '').trim();
+      if (title) await data.updateStory(storyId, { title });
+    } catch {
+      /* leave title blank — parent can name it manually */
+    }
+  }
 
   const deleteStory = async (storyId: string, title: string) => {
     const label = title.trim() || 'this untitled story';
@@ -127,8 +152,9 @@ export default function ParentLibrary() {
         },
         blob,
       );
-      // Fire-and-forget indexing.
+      // Fire-and-forget indexing + auto-titling.
       void indexStoryNow(story.id);
+      void autoTitleStory(story.id, sourceText);
 
       setQuickOpen(false);
       setQuickStatus(null);
@@ -207,7 +233,8 @@ export default function ParentLibrary() {
           )}
         </section>
 
-        {/* Recent activity from listeners (kids) */}
+        {/* Listener requests + activity */}
+        <ListenerRequests defaultWho={quickWho} />
         <RecentActivity audience="parent" />
 
         {/* Worlds & explicit per-world recording */}
